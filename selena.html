@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Selena Core AI v8.2 - Permission Shield</title>
+    
+    <!-- Bibliotecas Compatíveis com Android Webview -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background-color: #020617; 
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+        }
+
+        /* Efeito de Scanlines */
+        body::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Indicador de Monitorização */
+        #monitor-dot {
+            position: fixed;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background-color: #22c55e;
+            box-shadow: 0 0 15px #22c55e;
+            z-index: 100;
+            animation: pulse-dot 2s infinite ease-in-out;
+            display: none;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 0.4; transform: translateX(-50%) scale(0.9); }
+            50% { opacity: 1; transform: translateX(-50%) scale(1.2); }
+        }
+
+        #boot-screen {
+            position: fixed;
+            inset: 0;
+            background: #020617;
+            z-index: 1100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        #avatar-container {
+            width: 420px; height: 420px;
+            position: relative;
+            display: none;
+        }
+
+        .eye { transform-origin: center; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+        .blink { animation: blink-anim 0.2s ease-in-out forwards; }
+        @keyframes blink-anim { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.05); } }
+
+        @keyframes natural-talk {
+            0%, 100% { height: 8px; width: 80px; transform: translateY(0); }
+            25% { height: 32px; width: 72px; transform: translateY(-12px); }
+            50% { height: 20px; width: 88px; transform: translateY(-6px); }
+            75% { height: 48px; width: 64px; transform: translateY(-18px); }
+        }
+        .is-talking-mouth { animation: natural-talk 0.3s infinite steps(3); }
+
+        #crypto-card {
+            position: fixed;
+            top: -220px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 400px;
+            background: rgba(15, 23, 42, 0.98);
+            border: 3px solid white;
+            padding: 20px;
+            z-index: 120;
+            transition: top 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(15px);
+        }
+        #crypto-card.active { top: 40px; }
+
+        .bell-btn, .settings-btn { position: absolute; top: 25px; z-index: 60; cursor: pointer; opacity: 0.6; display: none; transform: scale(1.2); }
+        .bell-btn { left: 25px; }
+        .settings-btn { right: 25px; }
+
+        .controls-container {
+            position: fixed;
+            bottom: 40px;
+            right: 30px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            z-index: 60;
+        }
+
+        #mic-bubble {
+            width: 85px; height: 85px;
+            border-radius: 50%;
+            background: rgba(15, 23, 42, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255,255,255,0.1);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+        }
+
+        .mic-listening { border-color: #22c55e !important; background: rgba(34, 197, 94, 0.2) !important; animation: pulse-mic 1.5s infinite; }
+        .mic-processing { border-color: #3b82f6 !important; background: rgba(59, 130, 246, 0.2) !important; }
+
+        @keyframes pulse-mic { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
+
+        .switch-container { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; inset: 0; background-color: #1e293b; transition: .4s; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: #64748b; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #0369a1; }
+        input:checked + .slider:before { transform: translateX(24px); background-color: white; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 1);
+            z-index: 200;
+            overflow-y: auto;
+        }
+        .modal.active { display: block; }
+        .modal-content { min-height: 100vh; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
+
+        #debug-console {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 90px;
+            background: #000;
+            color: #0f0;
+            font-size: 8px;
+            padding: 10px;
+            overflow-y: auto;
+            z-index: 2000;
+            pointer-events: none;
+            opacity: 0.8;
+            border-top: 2px solid #22c55e;
+        }
+
+        #video-hidden { position: absolute; opacity: 0; pointer-events: none; width: 320px; height: 240px; }
+    </style>
+</head>
+<body>
+
+    <div id="debug-console">NÚCLEO SELENA V8.2: Sistema Pronto.</div>
+
+    <div id="boot-screen" onclick="initializeSystem()">
+        <div class="text-white text-center">
+            <div class="mb-4 text-7xl font-black italic tracking-tighter">SELENA</div>
+            <div class="text-[10px] uppercase tracking-[0.6em] opacity-40 mb-12">Neural Interface v8.2</div>
+            <div class="bg-white/5 border border-white/10 px-12 py-6 rounded-full animate-pulse shadow-2xl">
+                <span class="text-sm uppercase font-bold tracking-widest">Ativar Sistemas</span>
+            </div>
+            <p class="text-[9px] mt-8 opacity-30 uppercase tracking-widest px-10 leading-relaxed">
+                Garanta que as permissões foram dadas<br>nos blocos do Kodular antes de tocar.
+            </p>
+        </div>
+    </div>
+
+    <div id="monitor-dot"></div>
+    <video id="video-hidden" autoplay playsinline muted></video>
+    <canvas id="capture-canvas" class="hidden" width="320" height="240"></canvas>
+
+    <!-- UI Elements -->
+    <div class="bell-btn" id="open-history">
+        <svg viewBox="0 0 24 24" class="w-8 h-8 text-white fill-current"><path d="M12 22a2.01 2.01 0 002-2h-4a2.01 2.01 0 002 2zm6-6V10c0-3.07-1.63-5.64-4.5-6.32V3c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 4.36 6 6.92 6 10v6l-2 2v1h16v-1l-2-2z" /></svg>
+    </div>
+
+    <div class="settings-btn" id="open-settings">
+        <svg viewBox="0 0 24 24" class="w-8 h-8 text-white fill-current"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" /><path fill-rule="evenodd" d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 00-.986.57c-.166.115-.334.11-.444.03L6.21 5.155c-.78-.486-1.815-.297-2.363.44l-1.082 1.468c-.548.743-.44 1.803.242 2.374l1.01.847c.101.085.145.236.115.389a7.512 7.512 0 000 1.133c.03.153-.014.304-.115.389l-1.01.847c-.682.571-.79 1.631-.242 2.374l1.082 1.468c.548.737 1.583.926 2.363.44l1.112-.683c.11-.08.278-.085.444.03.295.203.62.393.986.57.182.088.278.228.298.348l.177 1.072c.151.904.933 1.567 1.85 1.567h1.844c.916 0 1.699-.663 1.85-1.567l.178-1.072c.02-.12.115-.26.297-.348.366-.177.691-.367.986-.57.166-.115.335-.11.444-.03l1.112.683c.78.486 1.815.297 2.363-.44l1.082-1.468c.548-.743.44-1.803-.242-2.374l-1.01-.847c-.101-.085-.145-.236-.115-.389a7.512 7.512 0 000-1.133c-.03-.153.014-.304.115-.389l1.01-.847c.682-.571.79-1.631-.242-2.374l-1.082-1.468c-.548-.737-1.583-.926-2.363-.44l-1.112.683c-.11.08-.278.085-.444-.03a7.493 7.493 0 00-.986-.57c-.182-.088-.278-.228-.298-.348l-.177-1.072c-.151-.904-.933-1.567-1.85-1.567h-1.844zM12 15.75a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z" clip-rule="evenodd" /></svg>
+    </div>
+
+    <div id="crypto-card">
+        <div class="flex justify-between items-center mb-1">
+            <span id="cry-symbol" class="text-xl font-bold italic tracking-tighter">BTC/USDT</span>
+            <span class="text-[9px] bg-white text-black px-2 py-0.5 font-black uppercase tracking-widest">SEL_ALERT</span>
+        </div>
+        <div id="cry-price" class="text-3xl font-black mb-1">$0.00</div>
+        <div id="cry-trend" class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">SINCRONIZANDO...</div>
+    </div>
+
+    <div id="avatar-container">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="image-rendering: pixelated;">
+            <g id="face">
+                <rect id="eye-l" class="eye" x="40" y="35" width="40" height="40" fill="white" />
+                <rect id="eye-r" class="eye" x="120" y="35" width="40" height="40" fill="white" />
+                <rect id="mouth-pixel" x="60" y="140" width="80" height="8" fill="white" />
+            </g>
+        </svg>
+    </div>
+
+    <div class="controls-container">
+        <div id="mic-bubble" onclick="toggleMic()">
+            <svg viewBox="0 0 24 24" class="w-10 h-10 text-white/50 fill-current"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z" /><path d="M19 10v1a7 7 0 01-14 0v-1M12 19v4M8 23h8" /></svg>
+        </div>
+        <div class="switch-container">
+            <label class="switch"><input type="checkbox" id="mode-toggle"><span class="slider"></span></label>
+        </div>
+    </div>
+
+    <!-- Modais -->
+    <div id="history-modal" class="modal"><div class="modal-content"><h2 class="text-white text-xl font-bold mb-10 uppercase border-b border-white/5 pb-4 w-full text-center tracking-widest">Alertas</h2><div id="alerts-list" class="w-full max-w-md"></div><button onclick="closeModal('history-modal')" class="mt-8 text-slate-500 uppercase border border-white/10 px-8 py-4 rounded-full font-bold">Voltar</button></div></div>
+
+    <div id="settings-modal" class="modal"><div class="modal-content"><h2 class="text-white text-xl font-bold mb-10 uppercase border-b border-white/5 pb-4 w-full text-center tracking-widest">Configuração Biométrica</h2><div class="bg-slate-900/60 p-6 rounded-3xl w-full max-w-md border border-white/5 mb-8 text-center"><video id="capture-video" class="w-full h-48 bg-black rounded-xl object-cover transform scale-x-[-1] mb-4" autoplay playsinline muted></video><input type="text" id="user-name" placeholder="Nome..." class="w-full bg-black border border-white/10 p-4 rounded-xl text-white mb-4 text-center outline-none focus:border-blue-500 font-bold"><button onclick="saveProfile()" class="w-full bg-blue-600 font-bold py-4 rounded-xl uppercase text-xs tracking-widest shadow-xl">Gravar Rosto</button><div id="profiles-list" class="grid grid-cols-2 gap-4 mt-8"></div></div><button onclick="closeModal('settings-modal')" class="mt-12 text-slate-500 uppercase border border-white/10 px-10 py-4 rounded-full font-bold">Sair</button></div></div>
+
+    <script>
+        function log(msg, isError = false) {
+            const el = document.getElementById('debug-console');
+            if(!el) return;
+            const color = isError ? "#f87171" : "#4ade80";
+            el.innerHTML += `<div style="color: ${color}">[${new Date().toLocaleTimeString()}] > ${msg}</div>`;
+            el.scrollTop = el.scrollHeight;
+        }
+
+        const apiKey = ""; 
+        let isSystemStarted = false;
+        let isSpeaking = false;
+        let lastPrices = { BTC: 0, ETH: 0 };
+        let profiles = [];
+        let recognition;
+        let speechAccumulator = "";
+        let isManualMode = false;
+        let lastIdTime = 0;
+        let currentUser = null;
+        let stream = null;
+
+        // Firebase Setup
+        const firebaseConfig = JSON.parse(window.__firebase_config || '{}');
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'selena-v8';
+
+        if (firebaseConfig.apiKey) {
+            firebase.initializeApp(firebaseConfig);
+            setupFirestore();
+        }
+
+        function setupFirestore() {
+            const db = firebase.firestore();
+            db.collection('artifacts').doc(appId).collection('public').doc('data').collection('profiles')
+              .onSnapshot(snap => {
+                profiles = [];
+                const list = document.getElementById('profiles-list');
+                list.innerHTML = "";
+                snap.forEach(d => {
+                    const data = d.data();
+                    profiles.push({ id: d.id, ...data });
+                    list.innerHTML += `<div class="bg-black/50 p-2 rounded-lg border border-white/5 relative group"><img src="${data.photo}" class="w-full aspect-square rounded object-cover mb-1"><div class="text-[8px] truncate uppercase font-bold text-slate-400">${data.name}</div></div>`;
+                });
+            }, err => log("Erro Firestore: " + err.message, true));
+        }
+
+        // --- INICIALIZAÇÃO ---
+        window.initializeSystem = async function() {
+            if (isSystemStarted) return;
+            log("Inicializando Handshake de Hardware...");
+            
+            try {
+                // Tenta capturar mídia - No Android, isso dispara o popup de permissão se os blocos do Kodular estiverem certos
+                log("Solicitando permissões ao dispositivo...");
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }, 
+                    audio: true 
+                });
+
+                document.getElementById('video-hidden').srcObject = stream;
+                document.getElementById('capture-video').srcObject = stream;
+                
+                log("Câmera e Microfone: ATIVOS.");
+
+                // Transição de Interface
+                document.getElementById('boot-screen').style.display = 'none';
+                document.getElementById('avatar-container').style.display = 'block';
+                document.querySelector('.controls-container').style.display = 'flex';
+                document.querySelector('.settings-btn').style.display = 'block';
+                document.querySelector('.bell-btn').style.display = 'block';
+                document.getElementById('monitor-dot').style.display = 'block';
+
+                isSystemStarted = true;
+                log("Selena Core v8.2: ONLINE.");
+
+                startIntervals();
+                initSpeech();
+                
+                await speakText("Sistemas biometrias e monitoramento de mercado Selena ativos.");
+
+            } catch (err) {
+                log(`FALHA: ${err.name} - ${err.message}`, true);
+                if (err.name === 'NotAllowedError') {
+                    alert("Acesso Negado. Verifique as permissões de Câmara e Mic nas configurações do Android.");
+                }
+            }
+        };
+
+        function startIntervals() {
+            setInterval(() => { if(!isSpeaking) lookAround(); }, 4000);
+            setInterval(() => { if(!isSpeaking) blink(); }, 5000);
+            setInterval(updateCrypto, 60000);
+            setInterval(() => { if(!isSpeaking && isSystemStarted) identifyUser(); }, 18000);
+            updateCrypto();
+        }
+
+        // --- VISION ENGINE ---
+        async function identifyUser() {
+            if (isSpeaking || profiles.length === 0 || Date.now() - lastIdTime < 20000) return;
+            
+            try {
+                const canvas = document.getElementById('capture-canvas');
+                const video = document.getElementById('video-hidden');
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, 320, 240);
+                const base64 = canvas.toDataURL('image/jpeg', 0.4).split(',')[1];
+
+                const parts = [{ text: `Perfis Registrados: ${profiles.map(p => p.name).join(', ')}` }, { inlineData: { mimeType: "image/jpeg", data: base64 } }];
+                profiles.forEach(p => { 
+                    const pData = p.photo.split(',')[1];
+                    if (pData) parts.push({ text: `Referência ${p.name}:` }, { inlineData: { mimeType: "image/jpeg", data: pData } });
+                });
+
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        contents: [{ parts }],
+                        systemInstruction: { parts: [{ text: "Analise a face. Responda APENAS o nome exato ou a palavra DESCONHECIDO." }] }
+                    })
+                });
+                const data = await res.json();
+                const idName = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+
+                if (idName && idName !== "DESCONHECIDO") {
+                    const match = profiles.find(p => idName.includes(p.name));
+                    if (match && currentUser !== match.name) {
+                        currentUser = match.name; lastIdTime = Date.now();
+                        speakText(`Olá ${match.name}. Identidade biometria Selena confirmada.`);
+                    }
+                } else if (idName === "DESCONHECIDO" && currentUser !== "DESCONHECIDO") {
+                    currentUser = "DESCONHECIDO"; lastIdTime = Date.now();
+                    speakText("Utilizador não identificado.");
+                }
+            } catch(e) { log("Erro Visão: " + e.message, true); }
+        }
+
+        async function saveProfile() {
+            const name = document.getElementById('user-name').value.trim();
+            if (!name) return;
+            try {
+                const canvas = document.getElementById('capture-canvas');
+                const video = document.getElementById('capture-video');
+                canvas.getContext('2d').drawImage(video, 0, 0, 320, 240);
+                const photo = canvas.toDataURL('image/jpeg', 0.6);
+                const db = firebase.firestore();
+                await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('profiles').add({ name, photo, createdAt: Date.now() });
+                document.getElementById('user-name').value = "";
+                log(`Perfil de ${name} salvo.`);
+            } catch(e) { log("Erro salvar: " + e.message, true); }
+        }
+
+        // --- CRYPTO ---
+        async function updateCrypto() {
+            try {
+                const pairs = ['BTCUSDT', 'ETHUSDT'];
+                for (const p of pairs) {
+                    const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${p}`);
+                    const d = await res.json();
+                    const price = parseFloat(d.price);
+                    const sym = p.replace('USDT', '');
+                    if (lastPrices[sym] !== 0) {
+                        const diff = ((price - lastPrices[sym]) / lastPrices[sym]) * 100;
+                        if (Math.abs(diff) > 0.04) triggerAlert(sym, price, diff);
+                    }
+                    lastPrices[sym] = price;
+                }
+                document.getElementById('monitor-dot').style.backgroundColor = "#22c55e";
+            } catch(e) { document.getElementById('monitor-dot').style.backgroundColor = "#ef4444"; }
+        }
+
+        function triggerAlert(sym, price, diff) {
+            const card = document.getElementById('crypto-card');
+            document.getElementById('cry-symbol').innerText = `${sym}/USDT`;
+            document.getElementById('cry-price').innerText = `$${price.toLocaleString('en-US')}`;
+            document.getElementById('cry-trend').innerText = diff > 0 ? "ALTA DETECTADA" : "BAIXA DETECTADA";
+            card.classList.add('active');
+            speakText(`Atenção. Variação no mercado de ${sym}.`);
+            setTimeout(() => card.classList.remove('active'), 15000);
+        }
+
+        // --- VOICE ---
+        async function speakText(text) {
+            if (isSpeaking) return;
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: `Sou Selena. Diga com voz masculina brasileira: ${text}` }] }],
+                        generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Zephyr" }, languageCode: "pt-BR" } } }
+                    })
+                });
+                const d = await res.json();
+                const audio = d.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+                if (audio) playAudio(audio);
+            } catch(e) { log("Erro TTS: " + e.message, true); }
+        }
+
+        function playAudio(base64) {
+            isSpeaking = true;
+            const bytes = new Uint8Array(atob(base64).split("").map(c => c.charCodeAt(0)));
+            const audio = new Audio(URL.createObjectURL(new Blob([bytes], { type: 'audio/wav' })));
+            audio.onplay = () => document.getElementById('mouth-pixel').classList.add('is-talking-mouth');
+            audio.onended = () => { 
+                isSpeaking = false; 
+                document.getElementById('mouth-pixel').classList.remove('is-talking-mouth');
+                if(!isManualMode && recognition) try { recognition.start(); } catch(e){}
+            };
+            audio.play().catch(e => { isSpeaking = false; log("Autoplay bloqueado.", true); });
+        }
+
+        function initSpeech() {
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SR) return;
+            recognition = new SR();
+            recognition.lang = 'pt-BR'; recognition.continuous = true;
+            recognition.onresult = (e) => {
+                let t = ""; for(let i=e.resultIndex; i<e.results.length; ++i) t += e.results[i][0].transcript;
+                speechAccumulator = t;
+            };
+            recognition.onstart = () => document.getElementById('mic-bubble').classList.add('mic-listening');
+            recognition.onend = () => {
+                document.getElementById('mic-bubble').classList.remove('mic-listening');
+                if(!isSpeaking && isSystemStarted && !isManualMode) try { recognition.start(); } catch(e){}
+            };
+            try { recognition.start(); } catch(e) {}
+        }
+
+        function toggleMic() {
+            if(!isSystemStarted) return;
+            try { recognition.start(); } catch(e) {}
+        }
+
+        function lookAround() {
+            const rx = (Math.random() * 30) - 15;
+            const ry = (Math.random() * 14) - 7;
+            document.getElementById('eye-l').style.transform = `translate(${rx}px, ${ry}px)`;
+            document.getElementById('eye-r').style.transform = `translate(${rx}px, ${ry}px)`;
+        }
+        function blink() {
+            const elL = document.getElementById('eye-l'); const elR = document.getElementById('eye-r');
+            elL.classList.add('blink'); elR.classList.add('blink');
+            setTimeout(() => { elL.classList.remove('blink'); elR.classList.remove('blink'); }, 200);
+        }
+
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        document.getElementById('open-settings').onclick = () => document.getElementById('settings-modal').classList.add('active');
+        document.getElementById('open-history').onclick = () => document.getElementById('history-modal').classList.add('active');
+
+        window.onerror = (m, u, l) => { log(`ERRO: ${m}`, true); return false; };
+    </script>
+</body>
+</html>
