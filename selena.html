@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Selena Core AI v9.3 - User ID & Voice Fix</title>
+    <title>Selena Core AI v9.7 - Tactical Switch Control</title>
     
-    <!-- Bibliotecas Compatíveis com Android Webview -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Bibliotecas Compatíveis -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
         body { 
@@ -79,7 +79,7 @@
 
         #msg-input-container {
             position: fixed;
-            bottom: 140px;
+            bottom: 220px;
             left: 50%;
             transform: translateX(-50%);
             width: 85%;
@@ -101,9 +101,45 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
+            gap: 20px;
             z-index: 60;
         }
+
+        /* Estilo do Botão Switch */
+        .switch-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #1e293b;
+            transition: .4s;
+            border-radius: 34px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px; width: 20px;
+            left: 4px; bottom: 3px;
+            background-color: #64748b;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #3b82f6; }
+        input:checked + .slider:before { transform: translateX(22px); background-color: white; }
+        .switch-label { font-size: 8px; font-weight: bold; text-transform: uppercase; color: #64748b; letter-spacing: 1px; }
 
         #mic-bubble {
             width: 85px; height: 85px;
@@ -114,7 +150,11 @@
             justify-content: center;
             border: 2px solid rgba(255,255,255,0.1);
             cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            touch-action: none; /* Previne scroll no mobile ao segurar */
         }
+        .mic-active { border-color: #ef4444 !important; background: rgba(239, 68, 68, 0.2) !important; transform: scale(1.1); }
 
         .modal {
             display: none;
@@ -171,7 +211,7 @@
         #audio-unlock-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(2,6,35,0.9);
+            background: rgba(2,6,35,0.95);
             z-index: 3000;
             display: flex;
             flex-direction: column;
@@ -194,40 +234,31 @@
             border: 1px solid rgba(74,222,128,0.3);
             z-index: 50;
         }
-
-        #capture-video {
-            width: 100%;
-            height: 180px;
-            background: #000;
-            border-radius: 14px;
-            object-fit: cover;
-            transform: scaleX(-1);
-            margin-bottom: 10px;
-        }
     </style>
 </head>
-<body onclick="unlockAudio()">
+<body>
 
-    <!-- Overlay de Desbloqueio de Áudio -->
+    <!-- Overlay de Sincronia -->
     <div id="audio-unlock-overlay" onclick="unlockAudio()">
         <div class="p-8 border-2 border-blue-500/30 rounded-full animate-pulse mb-6">
             <svg viewBox="0 0 24 24" class="w-12 h-12 text-blue-400 fill-current"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
         </div>
-        <p class="text-xs uppercase font-black tracking-[0.3em] text-blue-400">Toque para Sincronizar Selena</p>
+        <p class="text-xs uppercase font-black tracking-[0.3em] text-blue-400 text-center px-10">Ativar Núcleo Selena</p>
     </div>
 
-    <div id="debug-console">SELENA V9.3: Inicializando identificação biométrica...</div>
+    <div id="debug-console">SELENA V9.7: Sistemas Táticos Inicializados.</div>
     <div id="voice-status">Selena Falando...</div>
     <div id="user-badge" class="profile-badge">Visitante</div>
 
     <div id="monitor-dot"></div>
 
+    <!-- Interface HUD Mensagem -->
     <div id="msg-input-container">
-        <p class="text-[10px] text-blue-400 font-bold mb-3 uppercase tracking-[0.2em]">Transmitir Mensagem</p>
-        <input type="text" id="msg-text" placeholder="Escreva aqui..." class="mb-4 text-sm">
+        <p class="text-[10px] text-blue-400 font-bold mb-3 uppercase tracking-[0.2em]">Sinal de Texto</p>
+        <input type="text" id="msg-text" placeholder="Digite a transmissão..." class="mb-4 text-sm">
         <div class="flex gap-3">
-            <button onclick="sendMessage()" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all">Transmitir</button>
-            <button onclick="toggleMsgInput()" class="bg-slate-800 text-white px-5 rounded-xl text-xs uppercase font-bold">X</button>
+            <button onclick="sendMessage()" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-xl text-[10px] uppercase tracking-widest shadow-lg active:scale-95 transition-all">Enviar Transmissão</button>
+            <button onclick="toggleMsgInput()" class="bg-slate-800 text-white px-5 rounded-xl text-[10px] uppercase font-bold">X</button>
         </div>
     </div>
 
@@ -240,7 +271,7 @@
         <svg viewBox="0 0 24 24" class="w-8 h-8 text-white fill-current"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" /><path fill-rule="evenodd" d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 00-.986.57c-.166.115-.334.11-.444.03L6.21 5.155c-.78-.486-1.815-.297-2.363.44l-1.082 1.468c-.548.743-.44 1.803.242 2.374l1.01.847c.101.085.145.236.115.389a7.512 7.512 0 000 1.133c.03.153-.014.304-.115.389l-1.01.847c-.682.571-.79 1.631-.242 2.374l1.082 1.468c.548.737 1.583.926 2.363.44l1.112-.683c.11-.08.278-.085.444.03.295.203.62.393.986.57.182.088.278.228.298.348l.177 1.072c.151.904.933 1.567 1.85 1.567h1.844c.916 0 1.699-.663 1.85-1.567l.178-1.072c.02-.12.115-.26.297-.348.366-.177.691-.367.986-.57.166-.115.335-.11.444-.03l1.112.683c.78.486 1.815.297 2.363-.44l1.082-1.468c.548-.743.44-1.803-.242-2.374l-1.01-.847c-.101-.085-.145-.236-.115-.389a7.512 7.512 0 000-1.133c-.03-.153.014-.304.115-.389l1.01-.847c.682-.571.79-1.631.242-2.374l-1.082-1.468c-.548-.737-1.583-.926-2.363-.44l-1.112.683c-.11.08-.278.085-.444-.03a7.493 7.493 0 00-.986-.57c-.182-.088-.278-.228-.298-.348l-.177-1.072c-.151-.904-.933-1.567-1.85-1.567h-1.844zM12 15.75a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z" clip-rule="evenodd" /></svg>
     </div>
 
-    <!-- Avatar Selena -->
+    <!-- Selena Avatar -->
     <div id="avatar-container">
         <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="image-rendering: pixelated;">
             <g id="face">
@@ -251,57 +282,46 @@
         </svg>
     </div>
 
+    <!-- Controles Dinâmicos -->
     <div class="controls-container">
-        <div id="mic-bubble" onclick="toggleMsgInput()">
-            <svg viewBox="0 0 24 24" class="w-10 h-10 text-white/50 fill-current" id="mic-icon"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z" /><path d="M19 10v1a7 7 0 01-14 0v-1M12 19v4M8 23h8" /></svg>
+        <!-- Botão Switch -->
+        <div class="switch-container">
+            <span class="switch-label" id="mode-text">Voz</span>
+            <label class="switch">
+                <input type="checkbox" id="tactical-mode-switch" onchange="handleModeChange()">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <!-- Botão de Ação (Mic ou Texto) -->
+        <div id="mic-bubble" 
+             onmousedown="handleActionStart(event)" 
+             onmouseup="handleActionEnd(event)" 
+             ontouchstart="handleActionStart(event)" 
+             ontouchend="handleActionEnd(event)">
+            <svg viewBox="0 0 24 24" class="w-10 h-10 text-white/50 fill-current" id="mic-icon">
+                <path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z" />
+                <path d="M19 10v1a7 7 0 01-14 0v-1M12 19v4M8 23h8" />
+            </svg>
         </div>
     </div>
 
     <!-- Modais -->
-    <div id="history-modal" class="modal"><div class="modal-content"><h2 class="text-white text-xl font-black mb-10 uppercase border-b border-white/5 pb-4 w-full text-center italic">Logs de Atividade</h2><div id="activity-log" class="w-full max-w-md"></div><button onclick="closeModal('history-modal')" class="mt-8 text-slate-500 uppercase border border-white/10 px-10 py-5 rounded-full font-bold">Voltar</button></div></div>
+    <div id="history-modal" class="modal"><div class="modal-content"><h2 class="text-white text-xl font-black mb-10 uppercase border-b border-white/5 pb-4 w-full text-center italic">Monitoramento</h2><div id="activity-log" class="w-full max-w-md"></div><button onclick="closeModal('history-modal')" class="mt-8 text-slate-500 uppercase border border-white/10 px-10 py-5 rounded-full font-bold">Voltar</button></div></div>
 
     <div id="settings-modal" class="modal">
         <div class="modal-content">
-            <h2 class="text-white text-xl font-black mb-10 uppercase border-b border-white/5 pb-4 w-full text-center italic">Configurações (Catraca)</h2>
-            
+            <h2 class="text-white text-xl font-black mb-10 uppercase border-b border-white/5 pb-4 w-full text-center italic">Configurações</h2>
             <div class="bg-slate-900/60 p-6 rounded-3xl w-full max-w-md border border-white/5 mb-6">
-                <p class="text-[10px] text-blue-400 font-bold mb-4 uppercase">Identificação de Usuário</p>
-                <video id="capture-video" autoplay playsinline muted></video>
-                <canvas id="capture-canvas" class="hidden" width="320" height="240"></canvas>
-                <input type="text" id="user-name-input" placeholder="Seu Nome..." class="mb-4">
-                <button onclick="saveUserProfile()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl text-xs uppercase mb-6">Salvar Identidade</button>
-                
                 <label class="text-[9px] text-slate-500 uppercase font-black mb-2 block">ID da Sala</label>
                 <input type="text" id="room-id" value="SALA_SEL_01" class="font-bold text-center mb-6">
-                
-                <label class="text-[9px] text-slate-500 uppercase font-black mb-2 block">Modo de Operação</label>
-                <select id="comm-mode">
-                    <option value="both" selected>Enviar e Receber</option>
-                    <option value="send">Apenas Enviar</option>
-                    <option value="recv">Apenas Receber</option>
-                </select>
             </div>
-            
             <button onclick="closeModal('settings-modal')" class="mt-12 text-slate-500 uppercase border border-white/10 px-10 py-4 rounded-full font-bold">Sair</button>
         </div>
     </div>
 
     <script>
-        function log(msg, isError = false) {
-            const el = document.getElementById('debug-console');
-            if(!el) return;
-            const color = isError ? "#f87171" : "#4ade80";
-            el.innerHTML += `<div>[${new Date().toLocaleTimeString()}] > ${msg}</div>`;
-            el.scrollTop = el.scrollHeight;
-        }
-
-        const apiKey = "AIzaSyDGPHXlw0OBcFG8Np7GrdPt0n6nbqEcg54"; 
-        let isSpeaking = false;
-        let audioUnlocked = false;
-        let db, auth;
-        let userAuthenticated = false;
-        let currentUserName = "Visitante";
-
+        const apiKey = "AIzaSyDGPHXlw0OBcFG8Np7GrdPt0n6nbqEcg54";
         const firebaseConfig = {
             apiKey: "AIzaSyC65cHjZ-VgavqzZyozGv5hOHZSwH5CUCA",
             authDomain: "meucontrolefinanceiro-93d7a.firebaseapp.com",
@@ -310,7 +330,25 @@
             messagingSenderId: "106677595700",
             appId: "1:106677595700:android:7769ca467a6a4c17ae6461"
         };
+
+        function log(msg, isError = false) {
+            const el = document.getElementById('debug-console');
+            if(!el) return;
+            const color = isError ? "#f87171" : "#4ade80";
+            el.innerHTML += `<div>[${new Date().toLocaleTimeString()}] > ${msg}</div>`;
+            el.scrollTop = el.scrollHeight;
+        }
+
+        let isSpeaking = false;
+        let isListening = false;
+        let audioUnlocked = false;
+        let db, auth;
+        let userAuthenticated = false;
+        let currentUserName = "Visitante";
         const internalAppId = "selena-core-v9";
+        
+        let messageQueue = [];
+        let recognition;
 
         async function initFirebase() {
             try {
@@ -319,79 +357,154 @@
                 db = firebase.firestore();
                 await auth.signInAnonymously();
                 userAuthenticated = true;
-                log("Cloud Selena: Conectada.");
-                
-                // Tenta carregar identidade salva localmente
-                const saved = localStorage.getItem('selena_user');
-                if(saved) {
-                    currentUserName = saved;
-                    document.getElementById('user-badge').innerText = currentUserName;
-                }
-
+                log("Nuvem: Conectada.");
                 setupMessageListener();
-            } catch (err) { log("Erro Nuvem: " + err.message, true); }
+                initSpeech();
+            } catch (err) { log("Erro Cloud: " + err.message, true); }
         }
 
-        async function saveUserProfile() {
-            const name = document.getElementById('user-name-input').value.trim();
-            if(!name) return;
+        // --- SISTEMA DE RECONHECIMENTO ---
+        function initSpeech() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) return;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'pt-BR';
+            recognition.continuous = false;
+
+            recognition.onstart = () => {
+                isListening = true;
+                document.getElementById('mic-bubble').classList.add('mic-active');
+                log("Escutando comandos...");
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                log(`Entrada: "${transcript}"`);
+                handleUserVoiceInput(transcript);
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                document.getElementById('mic-bubble').classList.remove('mic-active');
+            };
+        }
+
+        // --- GESTÃO DE MODOS (SWITCH) ---
+        function handleModeChange() {
+            const isTextMode = document.getElementById('tactical-mode-switch').checked;
+            const modeText = document.getElementById('mode-text');
+            const micIcon = document.getElementById('mic-icon');
             
-            log(`Identificando ${name}...`);
-            const canvas = document.getElementById('capture-canvas');
-            const video = document.getElementById('capture-video');
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, 320, 240);
-            const photo = canvas.toDataURL('image/jpeg', 0.6);
-
-            try {
-                // RULE 1: /artifacts/{appId}/public/data/{collectionName}
-                await db.collection('artifacts').doc(internalAppId).collection('public').doc('data').collection('profiles').add({
-                    name: name,
-                    photo: photo,
-                    timestamp: Date.now()
-                });
-                
-                currentUserName = name;
-                localStorage.setItem('selena_user', name);
-                document.getElementById('user-badge').innerText = name;
-                log("Identidade Gravada.");
-                speakText(`Identidade de ${name} confirmada.`);
-            } catch(e) { log("Falha ao salvar biometria.", true); }
+            if (isTextMode) {
+                modeText.innerText = "Texto";
+                modeText.style.color = "#3b82f6";
+                // Muda ícone para Chat
+                micIcon.innerHTML = `<path d="M12 21.5c1.1 0 2-.9 2-2H10c0 1.1.9 2 2 2zM18 10V7c0-3.3-2.7-6-6-6S6 3.7 6 7v3l-2 2v1h16v-1l-2-2z" />`;
+            } else {
+                modeText.innerText = "Voz";
+                modeText.style.color = "#64748b";
+                // Volta ícone para Mic
+                micIcon.innerHTML = `<path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z" /><path d="M19 10v1a7 7 0 01-14 0v-1M12 19v4M8 23h8" />`;
+            }
         }
 
-        function setupMessageListener() {
-            const room = document.getElementById('room-id').value;
-            db.collection('artifacts').doc(internalAppId).collection('public').doc('data').collection('messages')
-              .orderBy('timestamp', 'desc').limit(1)
-              .onSnapshot(snap => {
-                const mode = document.getElementById('comm-mode').value;
-                if (mode === 'send') return;
-                snap.forEach(doc => {
-                    const data = doc.data();
-                    if (data.timestamp > Date.now() - 5000 && data.sender !== auth.currentUser.uid) {
-                        log(`Transmissão de ${data.userName}: ${data.content}`);
-                        speakText(`${data.userName} diz: ${data.content}`);
-                    }
-                });
-            }, err => log("Erro Escuta: " + err.message, true));
-        }
-
-        async function sendMessage() {
-            const text = document.getElementById('msg-text').value;
-            const room = document.getElementById('room-id').value;
-            if(!text || !userAuthenticated) return;
-            try {
-                await db.collection('artifacts').doc(internalAppId).collection('public').doc('data').collection('messages').add({
-                    content: text, 
-                    room: room, 
-                    userName: currentUserName,
-                    sender: auth.currentUser.uid, 
-                    timestamp: Date.now()
-                });
-                document.getElementById('msg-text').value = "";
+        function handleActionStart(e) {
+            e.preventDefault();
+            const isTextMode = document.getElementById('tactical-mode-switch').checked;
+            
+            if (isTextMode) {
                 toggleMsgInput();
-                log("Sinal enviado.");
-            } catch (err) { log("Erro Envio.", true); }
+            } else {
+                if (isSpeaking) return;
+                try { recognition.start(); } catch(err) {}
+            }
+        }
+
+        function handleActionEnd(e) {
+            const isTextMode = document.getElementById('tactical-mode-switch').checked;
+            if (!isTextMode && isListening) {
+                recognition.stop();
+            }
+        }
+
+        // --- CÉREBRO DA IA ---
+        async function handleUserVoiceInput(text) {
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: text }] }],
+                        systemInstruction: { parts: [{ text: `Você é a Selena, uma IA tática séria e direta. O usuário é ${currentUserName}. Responda concisamente em Português.` }] }
+                    })
+                });
+                const data = await res.json();
+                const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (aiResponse) addToQueue(aiResponse);
+            } catch (err) { log("Erro IA.", true); }
+        }
+
+        // --- MOTOR DE FILA E VOZ ---
+        function addToQueue(text) {
+            messageQueue.push(text);
+            processQueue();
+        }
+
+        async function processQueue() {
+            if (isSpeaking || messageQueue.length === 0 || !audioUnlocked) return;
+            const nextText = messageQueue.shift();
+            await speakText(nextText);
+        }
+
+        function pcmToWav(pcmBase64, sampleRate) {
+            const buffer = Uint8Array.from(atob(pcmBase64), c => c.charCodeAt(0)).buffer;
+            const wavBuffer = new ArrayBuffer(44 + buffer.byteLength);
+            const view = new DataView(wavBuffer);
+            const writeString = (offset, string) => {
+                for (let i = 0; i < string.length; i++) view.setUint8(offset + i, string.charCodeAt(i));
+            };
+            writeString(0, 'RIFF'); view.setUint32(4, 36 + buffer.byteLength, true);
+            writeString(8, 'WAVE'); writeString(12, 'fmt ');
+            view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+            view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+            writeString(36, 'data'); view.setUint32(40, buffer.byteLength, true);
+            new Uint8Array(wavBuffer, 44).set(new Uint8Array(buffer));
+            return new Blob([wavBuffer], { type: 'audio/wav' });
+        }
+
+        async function speakText(text) {
+            if (!apiKey) return;
+            isSpeaking = true;
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: text }] }],
+                        generationConfig: { 
+                            responseModalities: ["AUDIO"], 
+                            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Zephyr" } } } 
+                        }
+                    })
+                });
+                const data = await res.json();
+                const audioPart = data.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+                if (audioPart) {
+                    const sampleRate = parseInt(audioPart.inlineData.mimeType.split('rate=')[1]) || 24000;
+                    playAudio(pcmToWav(audioPart.inlineData.data, sampleRate));
+                } else { isSpeaking = false; processQueue(); }
+            } catch(e) { isSpeaking = false; processQueue(); }
+        }
+
+        function playAudio(blob) {
+            const mouth = document.getElementById('mouth-pixel');
+            const status = document.getElementById('voice-status');
+            const audio = new Audio(URL.createObjectURL(blob));
+            const finish = () => { isSpeaking = false; mouth.classList.remove('is-talking-mouth'); status.style.display = 'none'; processQueue(); };
+            audio.onplay = () => { mouth.classList.add('is-talking-mouth'); status.style.display = 'block'; };
+            audio.onended = finish; audio.onerror = finish;
+            audio.play().catch(finish);
         }
 
         function unlockAudio() {
@@ -400,50 +513,36 @@
             if (context.state === 'suspended') context.resume();
             audioUnlocked = true;
             document.getElementById('audio-unlock-overlay').style.display = 'none';
-            log("Hardware de Áudio: Sincronizado.");
-            speakText(`Sistema operacional. Reconhecido como ${currentUserName}.`);
+            addToQueue(`Selena operacional.`);
         }
 
-        async function speakText(text) {
-            if (!audioUnlocked || !apiKey) {
-                if(!apiKey) log("FALTA API KEY NO CÓDIGO!", true);
-                return;
-            }
-            if (isSpeaking) return;
-            
-            try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: `Diga roboticamente em português do brasil: ${text}` }] }],
-                        generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Zephyr" }, languageCode: "pt-BR" } } }
-                    })
+        // --- FIREBASE MESSAGING ---
+        function setupMessageListener() {
+            const room = document.getElementById('room-id').value;
+            db.collection('artifacts').doc(internalAppId).collection('public').doc('data').collection('messages')
+              .orderBy('timestamp', 'desc').limit(1)
+              .onSnapshot(snap => {
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    if (data.timestamp > Date.now() - 5000 && data.sender !== auth.currentUser.uid) {
+                        addToQueue(`${data.userName} diz: ${data.content}`);
+                    }
                 });
-                const d = await res.json();
-                const audio = d.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-                if (audio) playAudio(audio);
-                else log("Nenhum áudio gerado pelo Gemini.", true);
-            } catch(e) { log("Erro na síntese vocal."); }
+            });
         }
 
-        function playAudio(base64) {
-            isSpeaking = true;
-            const mouth = document.getElementById('mouth-pixel');
-            const status = document.getElementById('voice-status');
-            const audio = new Audio(URL.createObjectURL(new Blob([new Uint8Array(atob(base64).split("").map(c => c.charCodeAt(0)))], { type: 'audio/wav' })));
-            
-            const stop = () => { isSpeaking = false; mouth.classList.remove('is-talking-mouth'); status.style.display = 'none'; };
-            audio.onplay = () => { mouth.classList.add('is-talking-mouth'); status.style.display = 'block'; };
-            audio.onended = stop;
-            audio.onerror = (e) => { log("Erro ao tocar áudio.", true); stop(); };
-            audio.play().catch(e => { log("Autoplay recusado pelo Android.", true); stop(); });
-        }
-
-        async function initCamera() {
+        async function sendMessage() {
+            const text = document.getElementById('msg-text').value;
+            const room = document.getElementById('room-id').value;
+            if(!text || !userAuthenticated) return;
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-                document.getElementById('capture-video').srcObject = stream;
-            } catch(e) { log("Câmera bloqueada."); }
+                await db.collection('artifacts').doc(internalAppId).collection('public').doc('data').collection('messages').add({
+                    content: text, room: room, userName: currentUserName, sender: auth.currentUser.uid, timestamp: Date.now()
+                });
+                document.getElementById('msg-text').value = "";
+                toggleMsgInput();
+                log("Transmitido.");
+            } catch (err) { log("Erro Envio.", true); }
         }
 
         function toggleMsgInput() {
@@ -453,7 +552,7 @@
         }
 
         function lookAround() {
-            if (isSpeaking) return;
+            if (isSpeaking || isListening) return;
             const rx = (Math.random() * 30) - 15;
             const ry = (Math.random() * 14) - 7;
             document.getElementById('eye-l').style.transform = `translate(${rx}px, ${ry}px)`;
@@ -467,16 +566,13 @@
             setTimeout(() => { elL.classList.remove('blink'); elR.classList.remove('blink'); }, 200);
         }
 
-        function openModal(id) { 
-            document.getElementById(id).classList.add('active'); 
-            if(id === 'settings-modal') initCamera();
-        }
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
         window.onload = () => {
             initFirebase();
-            setInterval(() => { if(!isSpeaking) lookAround(); }, 4000);
-            setInterval(() => { if(!isSpeaking) blink(); }, 5000);
+            setInterval(lookAround, 4000);
+            setInterval(blink, 5000);
         };
     </script>
 </body>
