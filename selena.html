@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Selena Core AI v9.2 - Voice Active</title>
+    <title>Selena Core AI v9.3 - User ID & Voice Fix</title>
     
     <!-- Bibliotecas Compatíveis com Android Webview -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -167,12 +167,58 @@
             letter-spacing: 0.2em;
             display: none;
         }
+
+        #audio-unlock-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(2,6,35,0.9);
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .profile-badge {
+            position: fixed;
+            top: 75px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            font-weight: bold;
+            color: #4ade80;
+            background: rgba(0,0,0,0.5);
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(74,222,128,0.3);
+            z-index: 50;
+        }
+
+        #capture-video {
+            width: 100%;
+            height: 180px;
+            background: #000;
+            border-radius: 14px;
+            object-fit: cover;
+            transform: scaleX(-1);
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body onclick="unlockAudio()">
 
-    <div id="debug-console">SELENA V9.2: Chave Gemini configurada. Toque para áudio.</div>
+    <!-- Overlay de Desbloqueio de Áudio -->
+    <div id="audio-unlock-overlay" onclick="unlockAudio()">
+        <div class="p-8 border-2 border-blue-500/30 rounded-full animate-pulse mb-6">
+            <svg viewBox="0 0 24 24" class="w-12 h-12 text-blue-400 fill-current"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+        </div>
+        <p class="text-xs uppercase font-black tracking-[0.3em] text-blue-400">Toque para Sincronizar Selena</p>
+    </div>
+
+    <div id="debug-console">SELENA V9.3: Inicializando identificação biométrica...</div>
     <div id="voice-status">Selena Falando...</div>
+    <div id="user-badge" class="profile-badge">Visitante</div>
 
     <div id="monitor-dot"></div>
 
@@ -180,7 +226,7 @@
         <p class="text-[10px] text-blue-400 font-bold mb-3 uppercase tracking-[0.2em]">Transmitir Mensagem</p>
         <input type="text" id="msg-text" placeholder="Escreva aqui..." class="mb-4 text-sm">
         <div class="flex gap-3">
-            <button onclick="sendMessage()" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest shadow-lg">Transmitir</button>
+            <button onclick="sendMessage()" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all">Transmitir</button>
             <button onclick="toggleMsgInput()" class="bg-slate-800 text-white px-5 rounded-xl text-xs uppercase font-bold">X</button>
         </div>
     </div>
@@ -212,14 +258,22 @@
     </div>
 
     <!-- Modais -->
-    <div id="history-modal" class="modal"><div class="modal-content"><h2 class="text-white text-xl font-black mb-10 uppercase border-b border-white/5 pb-4 w-full text-center italic">Agenda & Logs</h2><div id="tasks-list" class="w-full max-w-md"></div><button onclick="closeModal('history-modal')" class="mt-8 text-slate-500 uppercase border border-white/10 px-10 py-5 rounded-full font-bold">Voltar</button></div></div>
+    <div id="history-modal" class="modal"><div class="modal-content"><h2 class="text-white text-xl font-black mb-10 uppercase border-b border-white/5 pb-4 w-full text-center italic">Logs de Atividade</h2><div id="activity-log" class="w-full max-w-md"></div><button onclick="closeModal('history-modal')" class="mt-8 text-slate-500 uppercase border border-white/10 px-10 py-5 rounded-full font-bold">Voltar</button></div></div>
 
     <div id="settings-modal" class="modal">
         <div class="modal-content">
-            <h2 class="text-white text-xl font-black mb-10 uppercase border-b border-white/5 pb-4 w-full text-center italic">Configurações</h2>
+            <h2 class="text-white text-xl font-black mb-10 uppercase border-b border-white/5 pb-4 w-full text-center italic">Configurações (Catraca)</h2>
+            
             <div class="bg-slate-900/60 p-6 rounded-3xl w-full max-w-md border border-white/5 mb-6">
+                <p class="text-[10px] text-blue-400 font-bold mb-4 uppercase">Identificação de Usuário</p>
+                <video id="capture-video" autoplay playsinline muted></video>
+                <canvas id="capture-canvas" class="hidden" width="320" height="240"></canvas>
+                <input type="text" id="user-name-input" placeholder="Seu Nome..." class="mb-4">
+                <button onclick="saveUserProfile()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl text-xs uppercase mb-6">Salvar Identidade</button>
+                
                 <label class="text-[9px] text-slate-500 uppercase font-black mb-2 block">ID da Sala</label>
                 <input type="text" id="room-id" value="SALA_SEL_01" class="font-bold text-center mb-6">
+                
                 <label class="text-[9px] text-slate-500 uppercase font-black mb-2 block">Modo de Operação</label>
                 <select id="comm-mode">
                     <option value="both" selected>Enviar e Receber</option>
@@ -227,6 +281,7 @@
                     <option value="recv">Apenas Receber</option>
                 </select>
             </div>
+            
             <button onclick="closeModal('settings-modal')" class="mt-12 text-slate-500 uppercase border border-white/10 px-10 py-4 rounded-full font-bold">Sair</button>
         </div>
     </div>
@@ -240,13 +295,12 @@
             el.scrollTop = el.scrollHeight;
         }
 
-        // --- GEMINI API KEY INTEGRADA ---
         const apiKey = "AIzaSyDGPHXlw0OBcFG8Np7GrdPt0n6nbqEcg54"; 
-
         let isSpeaking = false;
         let audioUnlocked = false;
         let db, auth;
         let userAuthenticated = false;
+        let currentUserName = "Visitante";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC65cHjZ-VgavqzZyozGv5hOHZSwH5CUCA",
@@ -265,9 +319,44 @@
                 db = firebase.firestore();
                 await auth.signInAnonymously();
                 userAuthenticated = true;
-                log("Nuvem Conectada.");
+                log("Cloud Selena: Conectada.");
+                
+                // Tenta carregar identidade salva localmente
+                const saved = localStorage.getItem('selena_user');
+                if(saved) {
+                    currentUserName = saved;
+                    document.getElementById('user-badge').innerText = currentUserName;
+                }
+
                 setupMessageListener();
-            } catch (err) { log("Erro Cloud: " + err.message, true); }
+            } catch (err) { log("Erro Nuvem: " + err.message, true); }
+        }
+
+        async function saveUserProfile() {
+            const name = document.getElementById('user-name-input').value.trim();
+            if(!name) return;
+            
+            log(`Identificando ${name}...`);
+            const canvas = document.getElementById('capture-canvas');
+            const video = document.getElementById('capture-video');
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, 320, 240);
+            const photo = canvas.toDataURL('image/jpeg', 0.6);
+
+            try {
+                // RULE 1: /artifacts/{appId}/public/data/{collectionName}
+                await db.collection('artifacts').doc(internalAppId).collection('public').doc('data').collection('profiles').add({
+                    name: name,
+                    photo: photo,
+                    timestamp: Date.now()
+                });
+                
+                currentUserName = name;
+                localStorage.setItem('selena_user', name);
+                document.getElementById('user-badge').innerText = name;
+                log("Identidade Gravada.");
+                speakText(`Identidade de ${name} confirmada.`);
+            } catch(e) { log("Falha ao salvar biometria.", true); }
         }
 
         function setupMessageListener() {
@@ -279,11 +368,9 @@
                 if (mode === 'send') return;
                 snap.forEach(doc => {
                     const data = doc.data();
-                    // Só lê se for uma mensagem nova de outro remetente
                     if (data.timestamp > Date.now() - 5000 && data.sender !== auth.currentUser.uid) {
-                        log(`Mensagem de ${data.room}: ${data.content}`);
-                        if (!audioUnlocked) log("Áudio bloqueado! Toque na tela.", true);
-                        speakText(data.content);
+                        log(`Transmissão de ${data.userName}: ${data.content}`);
+                        speakText(`${data.userName} diz: ${data.content}`);
                     }
                 });
             }, err => log("Erro Escuta: " + err.message, true));
@@ -295,7 +382,11 @@
             if(!text || !userAuthenticated) return;
             try {
                 await db.collection('artifacts').doc(internalAppId).collection('public').doc('data').collection('messages').add({
-                    content: text, room: room, sender: auth.currentUser.uid, timestamp: Date.now()
+                    content: text, 
+                    room: room, 
+                    userName: currentUserName,
+                    sender: auth.currentUser.uid, 
+                    timestamp: Date.now()
                 });
                 document.getElementById('msg-text').value = "";
                 toggleMsgInput();
@@ -308,26 +399,31 @@
             const context = new (window.AudioContext || window.webkitAudioContext)();
             if (context.state === 'suspended') context.resume();
             audioUnlocked = true;
-            log("Voz Sincronizada.");
-            speakText("Sistema operacional.");
+            document.getElementById('audio-unlock-overlay').style.display = 'none';
+            log("Hardware de Áudio: Sincronizado.");
+            speakText(`Sistema operacional. Reconhecido como ${currentUserName}.`);
         }
 
         async function speakText(text) {
-            if (!audioUnlocked || !apiKey) return;
+            if (!audioUnlocked || !apiKey) {
+                if(!apiKey) log("FALTA API KEY NO CÓDIGO!", true);
+                return;
+            }
             if (isSpeaking) return;
             
             try {
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: `Diga seriamente: ${text}` }] }],
+                        contents: [{ parts: [{ text: `Diga roboticamente em português do brasil: ${text}` }] }],
                         generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Zephyr" }, languageCode: "pt-BR" } } }
                     })
                 });
                 const d = await res.json();
                 const audio = d.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
                 if (audio) playAudio(audio);
-            } catch(e) { log("Falha na síntese vocal."); }
+                else log("Nenhum áudio gerado pelo Gemini.", true);
+            } catch(e) { log("Erro na síntese vocal."); }
         }
 
         function playAudio(base64) {
@@ -339,8 +435,15 @@
             const stop = () => { isSpeaking = false; mouth.classList.remove('is-talking-mouth'); status.style.display = 'none'; };
             audio.onplay = () => { mouth.classList.add('is-talking-mouth'); status.style.display = 'block'; };
             audio.onended = stop;
-            audio.onerror = stop;
-            audio.play().catch(stop);
+            audio.onerror = (e) => { log("Erro ao tocar áudio.", true); stop(); };
+            audio.play().catch(e => { log("Autoplay recusado pelo Android.", true); stop(); });
+        }
+
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                document.getElementById('capture-video').srcObject = stream;
+            } catch(e) { log("Câmera bloqueada."); }
         }
 
         function toggleMsgInput() {
@@ -364,7 +467,10 @@
             setTimeout(() => { elL.classList.remove('blink'); elR.classList.remove('blink'); }, 200);
         }
 
-        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function openModal(id) { 
+            document.getElementById(id).classList.add('active'); 
+            if(id === 'settings-modal') initCamera();
+        }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
         window.onload = () => {
