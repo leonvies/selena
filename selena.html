@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Selena Core AI v8.4 - WebView Security Bypass</title>
+    <title>Selena Core AI v8.5 - Pure Visual</title>
     
     <!-- Bibliotecas Compatíveis com Android Webview -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -36,19 +36,18 @@
             z-index: 10;
         }
 
-        /* Indicador de Monitorização */
+        /* Indicador de Monitorização - Visível por padrão */
         #monitor-dot {
             position: fixed;
             top: 25px;
             left: 50%;
             transform: translateX(-50%);
-            width: 10px; height: 10px;
+            width: 12px; height: 12px;
             border-radius: 50%;
             background-color: #22c55e;
             box-shadow: 0 0 15px #22c55e;
             z-index: 100;
             animation: pulse-dot 2s infinite ease-in-out;
-            display: none;
         }
 
         @keyframes pulse-dot {
@@ -56,23 +55,11 @@
             50% { opacity: 1; transform: translateX(-50%) scale(1.2); }
         }
 
-        #boot-screen {
-            position: fixed;
-            inset: 0;
-            background: #020617;
-            z-index: 1100;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            text-align: center;
-        }
-
+        /* Avatar Visível de primeira tela */
         #avatar-container {
             width: 420px; height: 420px;
             position: relative;
-            display: none;
+            display: block;
         }
 
         .eye { transform-origin: center; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -103,7 +90,8 @@
         }
         #crypto-card.active { top: 40px; }
 
-        .bell-btn, .settings-btn { position: absolute; top: 25px; z-index: 60; cursor: pointer; opacity: 0.6; display: none; transform: scale(1.2); }
+        /* Elementos de UI visíveis por padrão */
+        .bell-btn, .settings-btn { position: absolute; top: 25px; z-index: 60; cursor: pointer; opacity: 0.6; display: block; transform: scale(1.2); }
         .bell-btn { left: 25px; }
         .settings-btn { right: 25px; }
 
@@ -111,7 +99,7 @@
             position: fixed;
             bottom: 40px;
             right: 30px;
-            display: none;
+            display: flex;
             flex-direction: column;
             align-items: center;
             gap: 15px;
@@ -126,7 +114,6 @@
             align-items: center;
             justify-content: center;
             border: 2px solid rgba(255,255,255,0.1);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.7);
         }
 
         .mic-listening { border-color: #22c55e !important; background: rgba(34, 197, 94, 0.2) !important; animation: pulse-mic 1.5s infinite; }
@@ -146,7 +133,7 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 100px;
+            height: 90px;
             background: #000;
             color: #0f0;
             font-size: 8px;
@@ -158,25 +145,16 @@
             border-top: 2px solid #22c55e;
         }
 
+        /* Vídeo e Canvas ocultos para depuração de visão futuramente */
         #video-hidden { position: absolute; opacity: 0; pointer-events: none; width: 320px; height: 240px; }
     </style>
 </head>
-<body>
+<body onclick="unlockAudio()">
 
-    <div id="debug-console">SELENA CORE V8.4: Verificando protocolos de segurança...</div>
+    <div id="debug-console">SELENA CORE V8.5: Modo Visual Ativo.</div>
 
-    <div id="boot-screen" onclick="initializeSystem()">
-        <div class="text-white text-center">
-            <div class="mb-4 text-7xl font-black italic tracking-tighter">SELENA</div>
-            <div class="text-[10px] uppercase tracking-[0.6em] opacity-40 mb-12">Neural Interface v8.4</div>
-            <div class="bg-white/5 border border-white/10 px-12 py-6 rounded-full animate-pulse shadow-2xl">
-                <span class="text-sm uppercase font-bold tracking-widest">Sincronizar Hardware</span>
-            </div>
-            <p class="text-[9px] mt-8 opacity-30 uppercase tracking-widest px-10 leading-relaxed">
-                Ao clicar, aceite TODOS os popups do sistema.<br>A Selena requer acesso total para operar.
-            </p>
-        </div>
-    </div>
+    <!-- Tela de Boot removida (agora invisível) -->
+    <div id="boot-screen" style="display: none;"></div>
 
     <div id="monitor-dot"></div>
     <video id="video-hidden" autoplay playsinline muted></video>
@@ -200,6 +178,7 @@
         <div id="cry-trend" class="text-[10px] font-bold text-blue-400 uppercase tracking-widest italic">MONITORIZAÇÃO...</div>
     </div>
 
+    <!-- Avatar Principal (Olhos altos) -->
     <div id="avatar-container">
         <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="image-rendering: pixelated;">
             <g id="face">
@@ -219,11 +198,6 @@
         </div>
     </div>
 
-    <!-- Modais -->
-    <div id="history-modal" class="modal"><div class="modal-content"><h2 class="text-white text-xl font-bold mb-10 uppercase border-b border-white/5 pb-4 w-full text-center tracking-widest">Alertas</h2><div id="alerts-list" class="w-full max-w-md"></div><button onclick="closeModal('history-modal')" class="mt-8 text-slate-500 uppercase border border-white/10 px-8 py-4 rounded-full font-bold">Voltar</button></div></div>
-
-    <div id="settings-modal" class="modal"><div class="modal-content"><h2 class="text-white text-xl font-bold mb-10 uppercase border-b border-white/5 pb-4 w-full text-center tracking-widest">Biometria</h2><div class="bg-slate-900/60 p-6 rounded-3xl w-full max-w-md border border-white/5 mb-8 text-center"><video id="capture-video" class="w-full h-48 bg-black rounded-xl object-cover transform scale-x-[-1] mb-4" autoplay playsinline muted></video><input type="text" id="user-name" placeholder="Nome..." class="w-full bg-black border border-white/10 p-4 rounded-xl text-white mb-4 text-center outline-none focus:border-blue-500 font-bold"><button onclick="saveProfile()" class="w-full bg-blue-600 font-bold py-4 rounded-xl uppercase text-xs tracking-widest shadow-xl">Gravar Rosto</button><div id="profiles-list" class="grid grid-cols-2 gap-4 mt-8"></div></div><button onclick="closeModal('settings-modal')" class="mt-12 text-slate-500 uppercase border border-white/10 px-10 py-4 rounded-full font-bold">Sair</button></div></div>
-
     <script>
         function log(msg, isError = false) {
             const el = document.getElementById('debug-console');
@@ -234,151 +208,41 @@
         }
 
         const apiKey = ""; 
-        let isSystemStarted = false;
+        let isSystemStarted = true; // Iniciado por padrão
         let isSpeaking = false;
         let lastPrices = { BTC: 0, ETH: 0 };
-        let profiles = [];
-        let recognition;
-        let speechAccumulator = "";
-        let isManualMode = false;
-        let lastIdTime = 0;
-        let currentUser = null;
+        let audioUnlocked = false;
 
-        // Firebase Setup
-        const firebaseConfig = JSON.parse(window.__firebase_config || '{}');
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'selena-v8';
-
-        if (firebaseConfig.apiKey) {
-            firebase.initializeApp(firebaseConfig);
-            setupFirestore();
-        }
-
-        function setupFirestore() {
-            const db = firebase.firestore();
-            db.collection('artifacts').doc(appId).collection('public').doc('data').collection('profiles')
-              .onSnapshot(snap => {
-                profiles = [];
-                const list = document.getElementById('profiles-list');
-                if(!list) return;
-                list.innerHTML = "";
-                snap.forEach(d => {
-                    const data = d.data();
-                    profiles.push({ id: d.id, ...data });
-                    list.innerHTML += `<div class="bg-black/50 p-2 rounded-lg border border-white/5 relative group"><img src="${data.photo}" class="w-full aspect-square rounded object-cover mb-1"><div class="text-[8px] truncate uppercase font-bold text-slate-400">${data.name}</div></div>`;
-                });
-            }, err => log("Erro Cloud Sync: " + err.message, true));
-        }
-
-        // --- INICIALIZAÇÃO SEQUENCIAL PARA WEBVIEW ---
-        window.initializeSystem = async function() {
-            if (isSystemStarted) return;
-            log("Iniciando Handshake Sequencial...");
-            
+        // --- HARDWARE COMENTADO (PEDIDO) ---
+        /*
+        async function setupHardware() {
             try {
-                // Passo 1: Solicitar Câmara
-                log("Solicitando Câmera...");
-                const videoStream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "user" }
-                });
-                document.getElementById('video-hidden').srcObject = videoStream;
-                document.getElementById('capture-video').srcObject = videoStream;
-                log("Câmera: OK.");
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById('video-hidden').srcObject = stream;
+            } catch(e) { log("Hardware bloqueado."); }
+        }
+        */
 
-                // Passo 2: Solicitar Microfone
-                log("Solicitando Microfone...");
-                try {
-                    const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    log("Microfone: OK.");
-                } catch(e) {
-                    log("Aviso: Microfone não disponível. Visão continuará ativa.", true);
-                }
-
-                // UI Transitions
-                document.getElementById('boot-screen').style.display = 'none';
-                document.getElementById('avatar-container').style.display = 'block';
-                document.querySelector('.controls-container').style.display = 'flex';
-                document.querySelector('.settings-btn').style.display = 'block';
-                document.querySelector('.bell-btn').style.display = 'block';
-                document.getElementById('monitor-dot').style.display = 'block';
-
-                isSystemStarted = true;
-                log("Selena v8.4 Core: ONLINE.");
-
-                startIntervals();
-                initSpeech();
-                
-                await speakText("Sistemas inicializados. Monitorização ativa.");
-
-            } catch (err) {
-                log(`FALHA: ${err.name} - ${err.message}`, true);
-                if (err.name === 'NotAllowedError') {
-                    log("ERRO: O WebView do Android bloqueou o protocolo file://.", true);
-                    alert("Acesso Negado. Por favor, utilize o componente CustomWebView no Kodular e adicione o bloco 'GrantPermission'.");
-                }
-            }
-        };
+        // Função para destravar áudio no Android após o primeiro toque na tela
+        function unlockAudio() {
+            if (audioUnlocked) return;
+            log("Interação detetada: Áudio desbloqueado.");
+            const context = new (window.AudioContext || window.webkitAudioContext)();
+            if (context.state === 'suspended') context.resume();
+            audioUnlocked = true;
+            speakText("Núcleo visual Selena ativo.");
+        }
 
         function startIntervals() {
+            log("Iniciando loops de animação.");
             setInterval(() => { if(!isSpeaking) lookAround(); }, 4000);
             setInterval(() => { if(!isSpeaking) blink(); }, 5000);
+            
+            // Monitoramento Cripto ativo
             setInterval(updateCrypto, 60000);
-            setInterval(() => { if(!isSpeaking && isSystemStarted) identifyUser(); }, 18000);
             updateCrypto();
         }
 
-        // --- VISION ENGINE ---
-        async function identifyUser() {
-            if (isSpeaking || profiles.length === 0 || Date.now() - lastIdTime < 20000) return;
-            
-            try {
-                const canvas = document.getElementById('capture-canvas');
-                const video = document.getElementById('video-hidden');
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, 320, 240);
-                const base64 = canvas.toDataURL('image/jpeg', 0.4).split(',')[1];
-
-                const parts = [{ text: `Perfis: ${profiles.map(p => p.name).join(', ')}` }, { inlineData: { mimeType: "image/jpeg", data: base64 } }];
-                profiles.forEach(p => { 
-                    const pData = p.photo.split(',')[1];
-                    if (pData) parts.push({ text: `Ref ${p.name}:` }, { inlineData: { mimeType: "image/jpeg", data: pData } });
-                });
-
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        contents: [{ parts }],
-                        systemInstruction: { parts: [{ text: "Responda APENAS o nome exato ou DESCONHECIDO." }] }
-                    })
-                });
-                const data = await res.json();
-                const idName = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-
-                if (idName && idName !== "DESCONHECIDO") {
-                    const match = profiles.find(p => idName.includes(p.name));
-                    if (match && currentUser !== match.name) {
-                        currentUser = match.name; lastIdTime = Date.now();
-                        speakText(`Olá ${match.name}.`);
-                    }
-                }
-            } catch(e) { log("Erro na varredura visual.", true); }
-        }
-
-        async function saveProfile() {
-            const name = document.getElementById('user-name').value.trim();
-            if (!name) return;
-            try {
-                const canvas = document.getElementById('capture-canvas');
-                const video = document.getElementById('capture-video');
-                canvas.getContext('2d').drawImage(video, 0, 0, 320, 240);
-                const photo = canvas.toDataURL('image/jpeg', 0.6);
-                const db = firebase.firestore();
-                await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('profiles').add({ name, photo, createdAt: Date.now() });
-                document.getElementById('user-name').value = "";
-                log(`Perfil ${name} salvo.`);
-            } catch(e) { log("Erro ao salvar perfil.", true); }
-        }
-
-        // --- CRYPTO ---
         async function updateCrypto() {
             try {
                 const pairs = ['BTCUSDT', 'ETHUSDT'];
@@ -389,39 +253,35 @@
                     const sym = p.replace('USDT', '');
                     if (lastPrices[sym] !== 0) {
                         const diff = ((price - lastPrices[sym]) / lastPrices[sym]) * 100;
-                        if (Math.abs(diff) > 0.04) triggerAlert(sym, price, diff);
+                        if (Math.abs(diff) > 0.05) triggerAlert(sym, price, diff);
                     }
                     lastPrices[sym] = price;
                 }
-                document.getElementById('monitor-dot').style.backgroundColor = "#22c55e";
-            } catch(e) { document.getElementById('monitor-dot').style.backgroundColor = "#ef4444"; }
+            } catch(e) { log("Sincronização Cripto em espera."); }
         }
 
         function triggerAlert(sym, price, diff) {
             const card = document.getElementById('crypto-card');
             document.getElementById('cry-symbol').innerText = `${sym}/USDT`;
             document.getElementById('cry-price').innerText = `$${price.toLocaleString('en-US')}`;
-            document.getElementById('cry-trend').innerText = diff > 0 ? "ALTA DETETADA" : "BAIXA DETETADA";
             card.classList.add('active');
-            speakText(`Atenção. Variação no mercado de ${sym}.`);
-            setTimeout(() => card.classList.remove('active'), 15000);
+            setTimeout(() => card.classList.remove('active'), 10000);
         }
 
-        // --- VOICE ---
         async function speakText(text) {
-            if (isSpeaking) return;
+            if (isSpeaking || !audioUnlocked) return;
             try {
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: `Diga seriamente em português do brasil: ${text}` }] }],
+                        contents: [{ parts: [{ text: `Diga roboticamente em português do brasil: ${text}` }] }],
                         generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Zephyr" }, languageCode: "pt-BR" } } }
                     })
                 });
                 const d = await res.json();
                 const audio = d.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
                 if (audio) playAudio(audio);
-            } catch(e) { log("Erro no áudio.", true); }
+            } catch(e) { log("Serviço de voz aguardando."); }
         }
 
         function playAudio(base64) {
@@ -432,23 +292,7 @@
                 isSpeaking = false; 
                 document.getElementById('mouth-pixel').classList.remove('is-talking-mouth');
             };
-            audio.play().catch(e => { isSpeaking = false; log("Autoplay bloqueado.", true); });
-        }
-
-        function initSpeech() {
-            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SR) return;
-            recognition = new SR();
-            recognition.lang = 'pt-BR'; recognition.continuous = true;
-            recognition.onresult = (e) => {
-                let t = ""; for(let i=e.resultIndex; i<e.results.length; ++i) t += e.results[i][0].transcript;
-                speechAccumulator = t;
-            };
-            recognition.onstart = () => document.getElementById('mic-bubble').style.borderColor = "#22c55e";
-            recognition.onend = () => {
-                document.getElementById('mic-bubble').style.borderColor = "rgba(255,255,255,0.1)";
-                if(!isSpeaking && isSystemStarted) try { recognition.start(); } catch(e){}
-            };
+            audio.play().catch(e => { isSpeaking = false; });
         }
 
         function lookAround() {
@@ -457,17 +301,19 @@
             document.getElementById('eye-l').style.transform = `translate(${rx}px, ${ry}px)`;
             document.getElementById('eye-r').style.transform = `translate(${rx}px, ${ry}px)`;
         }
+
         function blink() {
             const elL = document.getElementById('eye-l'); const elR = document.getElementById('eye-r');
             elL.classList.add('blink'); elR.classList.add('blink');
             setTimeout(() => { elL.classList.remove('blink'); elR.classList.remove('blink'); }, 200);
         }
 
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-        document.getElementById('open-settings').onclick = () => document.getElementById('settings-modal').classList.add('active');
-        document.getElementById('open-history').onclick = () => document.getElementById('history-modal').classList.add('active');
+        window.onload = () => {
+            log("Página carregada. Toque na tela para sincronizar áudio.");
+            startIntervals();
+        };
 
-        window.onerror = (m, u, l) => { log(`ERRO: ${m}`, true); return false; };
+        window.onerror = (m, u, l) => { log(`Erro: ${m}`, true); return false; };
     </script>
 </body>
 </html>
