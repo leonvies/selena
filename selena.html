@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Selena Core AI v8.5 - Pure Visual</title>
+    <title>Selena Core AI v8.6 - Advanced Intelligence</title>
     
     <!-- Bibliotecas Compatíveis com Android Webview -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -25,7 +25,7 @@
             color: white;
         }
 
-        /* Efeito de Scanlines */
+        /* Efeito de Scanlines Estilo Terminal Retro */
         body::after {
             content: "";
             position: absolute;
@@ -36,7 +36,7 @@
             z-index: 10;
         }
 
-        /* Indicador de Monitorização - Visível por padrão */
+        /* Ponto Neon de Monitorização */
         #monitor-dot {
             position: fixed;
             top: 25px;
@@ -51,15 +51,14 @@
         }
 
         @keyframes pulse-dot {
-            0%, 100% { opacity: 0.4; transform: translateX(-50%) scale(0.9); }
-            50% { opacity: 1; transform: translateX(-50%) scale(1.2); }
+            0%, 100% { opacity: 0.4; transform: scale(0.9); }
+            50% { opacity: 1; transform: scale(1.2); }
         }
 
-        /* Avatar Visível de primeira tela */
         #avatar-container {
             width: 420px; height: 420px;
             position: relative;
-            display: block;
+            z-index: 5;
         }
 
         .eye { transform-origin: center; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -74,6 +73,7 @@
         }
         .is-talking-mouth { animation: natural-talk 0.3s infinite steps(3); }
 
+        /* Card de Alerta Flutuante */
         #crypto-card {
             position: fixed;
             top: -220px;
@@ -86,12 +86,20 @@
             padding: 20px;
             z-index: 120;
             transition: top 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            backdrop-filter: blur(15px);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
         }
         #crypto-card.active { top: 40px; }
 
-        /* Elementos de UI visíveis por padrão */
-        .bell-btn, .settings-btn { position: absolute; top: 25px; z-index: 60; cursor: pointer; opacity: 0.6; display: block; transform: scale(1.2); }
+        .btn-icon { 
+            position: absolute; 
+            top: 25px; 
+            z-index: 60; 
+            cursor: pointer; 
+            opacity: 0.7; 
+            transition: 0.3s;
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));
+        }
         .bell-btn { left: 25px; }
         .settings-btn { right: 25px; }
 
@@ -114,19 +122,20 @@
             align-items: center;
             justify-content: center;
             border: 2px solid rgba(255,255,255,0.1);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.7);
         }
-
-        .mic-listening { border-color: #22c55e !important; background: rgba(34, 197, 94, 0.2) !important; animation: pulse-mic 1.5s infinite; }
 
         .modal {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(2, 6, 23, 1);
+            background: rgba(2, 6, 23, 0.99);
             z-index: 200;
             overflow-y: auto;
+            backdrop-filter: blur(15px);
         }
         .modal.active { display: block; }
+        .modal-content { min-height: 100vh; padding: 40px 20px 100px; display: flex; flex-direction: column; align-items: center; }
 
         #debug-console {
             position: fixed;
@@ -145,43 +154,60 @@
             border-top: 2px solid #22c55e;
         }
 
-        /* Vídeo e Canvas ocultos para depuração de visão futuramente */
+        .history-item {
+            background: rgba(255,255,255,0.03);
+            border-left: 4px solid #3b82f6;
+            margin-bottom: 12px;
+            padding: 15px;
+            border-radius: 10px;
+            width: 100%;
+        }
+
+        select {
+            background: #000;
+            border: 2px solid #1e293b;
+            padding: 12px;
+            border-radius: 12px;
+            color: white;
+            width: 100%;
+            outline: none;
+            font-weight: bold;
+        }
+
         #video-hidden { position: absolute; opacity: 0; pointer-events: none; width: 320px; height: 240px; }
     </style>
 </head>
 <body onclick="unlockAudio()">
 
-    <div id="debug-console">SELENA CORE V8.5: Modo Visual Ativo.</div>
+    <div id="debug-console">SISTEMA SELENA V8.6: Inteligência Analítica Ativa.</div>
 
-    <!-- Tela de Boot removida (agora invisível) -->
-    <div id="boot-screen" style="display: none;"></div>
-
-    <div id="monitor-dot"></div>
+    <div id="monitor-dot" title="Monitoramento em Tempo Real"></div>
     <video id="video-hidden" autoplay playsinline muted></video>
     <canvas id="capture-canvas" class="hidden" width="320" height="240"></canvas>
 
     <!-- UI Elements -->
-    <div class="bell-btn" id="open-history">
-        <svg viewBox="0 0 24 24" class="w-8 h-8 text-white fill-current"><path d="M12 22a2.01 2.01 0 002-2h-4a2.01 2.01 0 002 2zm6-6V10c0-3.07-1.63-5.64-4.5-6.32V3c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 4.36 6 6.92 6 10v6l-2 2v1h16v-1l-2-2z" /></svg>
+    <div class="btn-icon bell-btn" onclick="openModal('history-modal')">
+        <svg viewBox="0 0 24 24" class="w-9 h-9 text-white fill-current"><path d="M12 22a2.01 2.01 0 002-2h-4a2.01 2.01 0 002 2zm6-6V10c0-3.07-1.63-5.64-4.5-6.32V3c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 4.36 6 6.92 6 10v6l-2 2v1h16v-1l-2-2z" /></svg>
     </div>
 
-    <div class="settings-btn" id="open-settings">
-        <svg viewBox="0 0 24 24" class="w-8 h-8 text-white fill-current"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" /><path fill-rule="evenodd" d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 00-.986.57c-.166.115-.334.11-.444.03L6.21 5.155c-.78-.486-1.815-.297-2.363.44l-1.082 1.468c-.548.743-.44 1.803.242 2.374l1.01.847c.101.085.145.236.115.389a7.512 7.512 0 000 1.133c.03.153-.014.304-.115.389l-1.01.847c-.682.571-.79 1.631-.242 2.374l1.082 1.468c.548.737 1.583.926 2.363.44l1.112-.683c.11-.08.278-.085.444.03.295.203.62.393.986.57.182.088.278.228.298.348l.177 1.072c.151.904.933 1.567 1.85 1.567h1.844c.916 0 1.699-.663 1.85-1.567l.178-1.072c.02-.12.115-.26.297-.348.366-.177.691-.367.986-.57.166-.115.335-.11.444-.03l1.112.683c.78.486 1.815.297 2.363-.44l1.082-1.468c.548-.743.44-1.803-.242-2.374l-1.01-.847c-.101-.085-.145-.236-.115-.389a7.512 7.512 0 000-1.133c-.03-.153.014-.304.115-.389l1.01-.847c.682-.571.79-1.631.242-2.374l-1.082-1.468c-.548-.737-1.583-.926-2.363-.44l-1.112.683c-.11.08-.278.085-.444-.03a7.493 7.493 0 00-.986-.57c-.182-.088-.278-.228-.298-.348l-.177-1.072c-.151-.904-.933-1.567-1.85-1.567h-1.844zM12 15.75a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z" clip-rule="evenodd" /></svg>
+    <div class="btn-icon settings-btn" onclick="openModal('settings-modal')">
+        <svg viewBox="0 0 24 24" class="w-9 h-9 text-white fill-current"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" /><path fill-rule="evenodd" d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 00-.986.57c-.166.115-.334.11-.444.03L6.21 5.155c-.78-.486-1.815-.297-2.363.44l-1.082 1.468c-.548.743-.44 1.803.242 2.374l1.01.847c.101.085.145.236.115.389a7.512 7.512 0 000 1.133c.03.153-.014.304-.115.389l-1.01.847c-.682.571-.79 1.631-.242 2.374l1.082 1.468c.548.737 1.583.926 2.363.44l1.112-.683c.11-.08.278-.085.444.03.295.203.62.393.986.57.182.088.278.228.298.348l.177 1.072c.151.904.933 1.567 1.85 1.567h1.844c.916 0 1.699-.663 1.85-1.567l.178-1.072c.02-.12.115-.26.297-.348.366-.177.691-.367.986-.57.166-.115.335-.11.444-.03l1.112.683c.78.486 1.815.297 2.363-.44l1.082-1.468c.548-.743.44-1.803-.242-2.374l-1.01-.847c-.101-.085-.145-.236-.115-.389a7.512 7.512 0 000-1.133c-.03-.153.014-.304.115-.389l1.01-.847c.682-.571.79-1.631.242-2.374l-1.082-1.468c-.548-.737-1.583-.926-2.363-.44l-1.112.683c-.11.08-.278.085-.444-.03a7.493 7.493 0 00-.986-.57c-.182-.088-.278-.228-.298-.348l-.177-1.072c-.151-.904-.933-1.567-1.85-1.567h-1.844zM12 15.75a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z" clip-rule="evenodd" /></svg>
     </div>
 
+    <!-- Crypto Alert Float -->
     <div id="crypto-card">
         <div class="flex justify-between items-center mb-1">
             <span id="cry-symbol" class="text-xl font-bold italic tracking-tighter">BTC/USDT</span>
-            <span class="text-[9px] bg-white text-black px-2 py-0.5 font-black uppercase tracking-widest">SEL_ACTIVE</span>
+            <span id="cry-type-badge" class="text-[9px] bg-white text-black px-2 py-0.5 font-black uppercase tracking-widest">SINAL</span>
         </div>
-        <div id="cry-price" class="text-3xl font-black mb-1">$0.00</div>
-        <div id="cry-trend" class="text-[10px] font-bold text-blue-400 uppercase tracking-widest italic">MONITORIZAÇÃO...</div>
+        <div id="cry-price" class="text-4xl font-black mb-1 text-white">$0.00</div>
+        <div id="cry-signal" class="text-[10px] font-bold text-blue-400 uppercase tracking-widest italic animate-pulse">ANALISANDO VARIAÇÕES...</div>
     </div>
 
-    <!-- Avatar Principal (Olhos altos) -->
+    <!-- Selena Avatar Principal -->
     <div id="avatar-container">
         <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="image-rendering: pixelated;">
-            <g id="face">
+            <g id="face-graphics">
                 <rect id="eye-l" class="eye" x="40" y="35" width="40" height="40" fill="white" />
                 <rect id="eye-r" class="eye" x="120" y="35" width="40" height="40" fill="white" />
                 <rect id="mouth-pixel" x="60" y="140" width="80" height="8" fill="white" />
@@ -191,10 +217,55 @@
 
     <div class="controls-container">
         <div id="mic-bubble">
-            <svg viewBox="0 0 24 24" class="w-10 h-10 text-white/50 fill-current"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z" /><path d="M19 10v1a7 7 0 01-14 0v-1M12 19v4M8 23h8" /></svg>
+            <svg viewBox="0 0 24 24" class="w-10 h-10 text-white/40 fill-current transition-colors" id="mic-icon"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z" /><path d="M19 10v1a7 7 0 01-14 0v-1M12 19v4M8 23h8" /></svg>
         </div>
         <div class="switch-container">
-            <label class="switch"><input type="checkbox" id="mode-toggle"><span class="slider"></span></label>
+            <label class="switch"><input type="checkbox" id="mode-toggle" disabled><span class="slider opacity-30"></span></label>
+        </div>
+    </div>
+
+    <!-- Modal Histórico de Alertas -->
+    <div id="history-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-white text-xl font-bold mb-10 uppercase tracking-widest border-b border-white/10 pb-4 w-full text-center">Registros Selena</h2>
+            <div id="alerts-history-list" class="w-full max-w-md">
+                <!-- Injetado via JS -->
+            </div>
+            <button onclick="closeModal('history-modal')" class="mt-8 text-slate-500 uppercase border border-white/10 px-10 py-5 rounded-full font-bold shadow-lg">Voltar</button>
+        </div>
+    </div>
+
+    <!-- Modal Definições de Estratégia -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-white text-xl font-bold mb-10 uppercase border-b border-white/10 pb-4 w-full text-center tracking-widest">Núcleo de Controle</h2>
+            
+            <div class="bg-slate-900/60 p-6 rounded-3xl w-full max-w-md border border-white/5 mb-8">
+                <h3 class="text-[10px] text-blue-400 font-black mb-4 uppercase tracking-[0.2em]">Configurações de Monitoramento</h3>
+                
+                <label class="text-[9px] text-slate-500 uppercase font-black mb-2 block">Operação Alvo</label>
+                <select id="strat-type">
+                    <option value="ambos">Compras e Vendas</option>
+                    <option value="compra">Apenas Compras (Alta)</option>
+                    <option value="venda">Apenas Vendas (Baixa)</option>
+                </select>
+
+                <label class="text-[9px] text-slate-500 uppercase font-black mt-6 mb-2 block">Intervalo de Varredura</label>
+                <select id="strat-interval">
+                    <option value="60000">M1 (Curto Prazo)</option>
+                    <option value="300000" selected>M5 (Médio Prazo)</option>
+                    <option value="900000">M15 (Longo Prazo)</option>
+                </select>
+            </div>
+
+            <div class="bg-slate-900 p-8 rounded-3xl w-full max-w-md border border-white/5 text-center shadow-2xl">
+                <h3 class="text-[10px] text-red-500 font-black mb-6 uppercase tracking-widest">Base de Dados Biométrica</h3>
+                <div id="profiles-list" class="grid grid-cols-2 gap-4">
+                    <!-- Perfis do Firebase -->
+                </div>
+            </div>
+
+            <button onclick="closeModal('settings-modal')" class="mt-12 text-slate-500 uppercase border border-white/10 px-10 py-4 rounded-full font-bold text-xs">Sair</button>
         </div>
     </div>
 
@@ -208,64 +279,124 @@
         }
 
         const apiKey = ""; 
-        let isSystemStarted = true; // Iniciado por padrão
         let isSpeaking = false;
         let lastPrices = { BTC: 0, ETH: 0 };
+        let historyData = [];
         let audioUnlocked = false;
+        let cryptoInterval = 300000; // Inicia com M5
 
-        // --- HARDWARE COMENTADO (PEDIDO) ---
-        /*
-        async function setupHardware() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                document.getElementById('video-hidden').srcObject = stream;
-            } catch(e) { log("Hardware bloqueado."); }
+        // Configuração Firebase (Injetada via Canvas ou via objeto global)
+        const firebaseConfig = JSON.parse(window.__firebase_config || '{}');
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'selena-kodular-v86';
+
+        if (firebaseConfig.apiKey) {
+            firebase.initializeApp(firebaseConfig);
+            setupFirestore();
         }
-        */
 
-        // Função para destravar áudio no Android após o primeiro toque na tela
+        function setupFirestore() {
+            const db = firebase.firestore();
+            // Carregar Histórico
+            db.collection('artifacts').doc(appId).collection('public').doc('data').collection('alerts')
+              .orderBy('timestamp', 'desc').limit(10).onSnapshot(snap => {
+                historyData = [];
+                snap.forEach(doc => historyData.push(doc.data()));
+                renderHistory();
+            });
+        }
+
+        // Função para destravar áudio no Android
         function unlockAudio() {
             if (audioUnlocked) return;
-            log("Interação detetada: Áudio desbloqueado.");
+            log("Conexão de áudio estabelecida.");
             const context = new (window.AudioContext || window.webkitAudioContext)();
             if (context.state === 'suspended') context.resume();
             audioUnlocked = true;
-            speakText("Núcleo visual Selena ativo.");
+            speakText("Selena reconectada. Iniciando análise de dados.");
         }
 
         function startIntervals() {
-            log("Iniciando loops de animação.");
             setInterval(() => { if(!isSpeaking) lookAround(); }, 4000);
             setInterval(() => { if(!isSpeaking) blink(); }, 5000);
             
-            // Monitoramento Cripto ativo
-            setInterval(updateCrypto, 60000);
-            updateCrypto();
+            // Loop principal de Cripto
+            runCryptoCheck();
+        }
+
+        async function runCryptoCheck() {
+            await updateCrypto();
+            setTimeout(runCryptoCheck, cryptoInterval);
         }
 
         async function updateCrypto() {
             try {
                 const pairs = ['BTCUSDT', 'ETHUSDT'];
+                const strat = document.getElementById('strat-type').value;
+
                 for (const p of pairs) {
                     const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${p}`);
                     const d = await res.json();
                     const price = parseFloat(d.price);
                     const sym = p.replace('USDT', '');
+                    
                     if (lastPrices[sym] !== 0) {
                         const diff = ((price - lastPrices[sym]) / lastPrices[sym]) * 100;
-                        if (Math.abs(diff) > 0.05) triggerAlert(sym, price, diff);
+                        const isBuy = diff > 0.04;
+                        const isSell = diff < -0.04;
+
+                        let shouldAlert = false;
+                        if(strat === 'ambos' && (isBuy || isSell)) shouldAlert = true;
+                        if(strat === 'compra' && isBuy) shouldAlert = true;
+                        if(strat === 'venda' && isSell) shouldAlert = true;
+
+                        if (shouldAlert) triggerAlert(sym, price, diff);
                     }
                     lastPrices[sym] = price;
                 }
-            } catch(e) { log("Sincronização Cripto em espera."); }
+                document.getElementById('monitor-dot').style.backgroundColor = "#22c55e";
+            } catch(e) { 
+                log("Binance offline ou sem rede."); 
+                document.getElementById('monitor-dot').style.backgroundColor = "#ef4444";
+            }
         }
 
-        function triggerAlert(sym, price, diff) {
+        async function triggerAlert(sym, price, diff) {
             const card = document.getElementById('crypto-card');
+            const badge = document.getElementById('cry-type-badge');
+            const signalText = document.getElementById('cry-signal');
+            
             document.getElementById('cry-symbol').innerText = `${sym}/USDT`;
-            document.getElementById('cry-price').innerText = `$${price.toLocaleString('en-US')}`;
+            document.getElementById('cry-price').innerText = `$${price.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            
+            const type = diff > 0 ? "COMPRA" : "VENDA";
+            badge.innerText = type;
+            badge.style.backgroundColor = diff > 0 ? "#22c55e" : "#ef4444";
+            badge.style.color = "white";
+            signalText.innerText = `SINAL DE ${type} DETECTADO`;
+            
             card.classList.add('active');
-            setTimeout(() => card.classList.remove('active'), 10000);
+            
+            // Gravar no Firebase se configurado
+            try {
+                const db = firebase.firestore();
+                await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('alerts').add({
+                    symbol: sym, price, variation: diff.toFixed(2), type, timestamp: Date.now()
+                });
+            } catch(e) {}
+
+            speakText(`Atenção Comandante. O ${sym} sinalizou oportunidade de ${type}.`);
+            setTimeout(() => card.classList.remove('active'), 12000);
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('alerts-history-list');
+            list.innerHTML = historyData.map(h => `
+                <div class="history-item" style="border-color: ${h.type === 'COMPRA' ? '#22c55e' : '#ef4444'}">
+                    <div class="flex justify-between text-[10px] font-bold opacity-40"><span>${h.symbol}</span><span>${new Date(h.timestamp).toLocaleTimeString()}</span></div>
+                    <div class="text-xl font-black italic">$${parseFloat(h.price).toLocaleString()}</div>
+                    <div class="text-[9px] font-bold">ALERTA DE ${h.type} (${h.variation}%)</div>
+                </div>
+            `).join('');
         }
 
         async function speakText(text) {
@@ -281,7 +412,7 @@
                 const d = await res.json();
                 const audio = d.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
                 if (audio) playAudio(audio);
-            } catch(e) { log("Serviço de voz aguardando."); }
+            } catch(e) { log("Falha no sintetizador."); }
         }
 
         function playAudio(base64) {
@@ -295,25 +426,35 @@
             audio.play().catch(e => { isSpeaking = false; });
         }
 
+        // Animações de Personalidade
         function lookAround() {
             const rx = (Math.random() * 30) - 15;
             const ry = (Math.random() * 14) - 7;
             document.getElementById('eye-l').style.transform = `translate(${rx}px, ${ry}px)`;
             document.getElementById('eye-r').style.transform = `translate(${rx}px, ${ry}px)`;
         }
-
         function blink() {
             const elL = document.getElementById('eye-l'); const elR = document.getElementById('eye-r');
             elL.classList.add('blink'); elR.classList.add('blink');
             setTimeout(() => { elL.classList.remove('blink'); elR.classList.remove('blink'); }, 200);
         }
 
+        // UI Helpers
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        // Mudar intervalo dinamicamente
+        document.getElementById('strat-interval').addEventListener('change', (e) => {
+            cryptoInterval = parseInt(e.target.value);
+            log(`Intervalo alterado para ${cryptoInterval/60000} minutos.`);
+        });
+
         window.onload = () => {
-            log("Página carregada. Toque na tela para sincronizar áudio.");
+            log("Interface Renderizada. Aguardando sincronização de áudio...");
             startIntervals();
         };
 
-        window.onerror = (m, u, l) => { log(`Erro: ${m}`, true); return false; };
+        window.onerror = (m, u, l) => { log(`Exceção: ${m}`, true); return false; };
     </script>
 </body>
 </html>
