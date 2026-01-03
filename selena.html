@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Selena Core AI v9.0 - Tactic Comm & Tasks</title>
+    <title>Selena Core AI v9.2 - Voice Active</title>
     
     <!-- Bibliotecas Compatíveis com Android Webview -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -26,7 +26,7 @@
             user-select: none;
         }
 
-        /* Efeito de Scanlines Estilo Monitor CRT */
+        /* Efeito CRT Terminal */
         body::after {
             content: "";
             position: absolute;
@@ -37,7 +37,6 @@
             z-index: 10;
         }
 
-        /* Ponto de Status de Rede */
         #monitor-dot {
             position: fixed;
             top: 25px;
@@ -60,14 +59,12 @@
             width: 380px; height: 380px;
             position: relative;
             z-index: 5;
-            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         .eye { transform-origin: center; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
         .blink { animation: blink-anim 0.2s ease-in-out forwards; }
         @keyframes blink-anim { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.05); } }
 
-        /* Animação da Boca */
         @keyframes natural-talk {
             0%, 100% { height: 8px; width: 80px; transform: translateY(0); }
             25% { height: 32px; width: 72px; transform: translateY(-12px); }
@@ -80,7 +77,6 @@
         .bell-btn { left: 25px; }
         .settings-btn { right: 25px; }
 
-        /* HUD de Mensagem */
         #msg-input-container {
             position: fixed;
             bottom: 140px;
@@ -118,7 +114,6 @@
             justify-content: center;
             border: 2px solid rgba(255,255,255,0.1);
             cursor: pointer;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
 
         .modal {
@@ -138,15 +133,16 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 70px;
+            height: 90px;
             background: #000;
             color: #0f0;
             font-size: 8px;
-            padding: 8px;
+            padding: 10px;
             overflow-y: auto;
             z-index: 2000;
             pointer-events: none;
-            opacity: 0.6;
+            opacity: 0.8;
+            border-top: 2px solid #22c55e;
         }
 
         input, select {
@@ -157,19 +153,6 @@
             color: white;
             width: 100%;
             outline: none;
-            font-weight: bold;
-        }
-
-        .task-card {
-            background: rgba(255,255,255,0.03);
-            border-radius: 14px;
-            padding: 16px;
-            margin-bottom: 12px;
-            width: 100%;
-            border-left: 4px solid #3b82f6;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
 
         #voice-status {
@@ -188,17 +171,16 @@
 </head>
 <body onclick="unlockAudio()">
 
-    <div id="debug-console">SELENA V9.0: Sincronização Firebase Ativa.</div>
+    <div id="debug-console">SELENA V9.2: Chave Gemini configurada. Toque para áudio.</div>
     <div id="voice-status">Selena Falando...</div>
 
     <div id="monitor-dot"></div>
 
-    <!-- Interface de Transmissão -->
     <div id="msg-input-container">
-        <p class="text-[10px] text-blue-400 font-bold mb-3 uppercase tracking-[0.2em]">Canais de Comunicação</p>
-        <input type="text" id="msg-text" placeholder="Digite a mensagem de voz..." class="mb-4 text-sm">
+        <p class="text-[10px] text-blue-400 font-bold mb-3 uppercase tracking-[0.2em]">Transmitir Mensagem</p>
+        <input type="text" id="msg-text" placeholder="Escreva aqui..." class="mb-4 text-sm">
         <div class="flex gap-3">
-            <button onclick="sendMessage()" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-transform">Transmitir</button>
+            <button onclick="sendMessage()" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest shadow-lg">Transmitir</button>
             <button onclick="toggleMsgInput()" class="bg-slate-800 text-white px-5 rounded-xl text-xs uppercase font-bold">X</button>
         </div>
     </div>
@@ -229,37 +211,23 @@
         </div>
     </div>
 
-    <!-- Modal Agenda -->
-    <div id="history-modal" class="modal">
-        <div class="modal-content">
-            <h2 class="text-white text-xl font-black mb-10 uppercase border-b border-white/5 pb-4 w-full text-center tracking-widest italic">Agenda Tática</h2>
-            <div class="w-full max-w-md mb-8 bg-slate-900/50 p-6 rounded-3xl border border-white/5">
-                <p class="text-[10px] text-blue-400 font-bold mb-4 uppercase">Novo Agendamento</p>
-                <input type="text" id="task-desc" placeholder="Ex: Monitorar Bitcoin..." class="mb-3">
-                <input type="time" id="task-time" class="mb-4">
-                <button onclick="addTask()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest shadow-lg">Agendar Alarme</button>
-            </div>
-            <div id="tasks-list" class="w-full max-w-md flex flex-col gap-2"></div>
-            <button onclick="closeModal('history-modal')" class="mt-12 text-slate-500 uppercase border border-white/10 px-10 py-5 rounded-full font-bold text-xs">Voltar</button>
-        </div>
-    </div>
+    <!-- Modais -->
+    <div id="history-modal" class="modal"><div class="modal-content"><h2 class="text-white text-xl font-black mb-10 uppercase border-b border-white/5 pb-4 w-full text-center italic">Agenda & Logs</h2><div id="tasks-list" class="w-full max-w-md"></div><button onclick="closeModal('history-modal')" class="mt-8 text-slate-500 uppercase border border-white/10 px-10 py-5 rounded-full font-bold">Voltar</button></div></div>
 
-    <!-- Modal Configurações -->
     <div id="settings-modal" class="modal">
         <div class="modal-content">
-            <h2 class="text-white text-xl font-black mb-10 uppercase border-b border-white/5 pb-4 w-full text-center tracking-widest italic">Configurações</h2>
+            <h2 class="text-white text-xl font-black mb-10 uppercase border-b border-white/5 pb-4 w-full text-center italic">Configurações</h2>
             <div class="bg-slate-900/60 p-6 rounded-3xl w-full max-w-md border border-white/5 mb-6">
-                <label class="text-[9px] text-slate-500 uppercase font-black mb-2 block">ID da Sala (Rede Compartilhada)</label>
+                <label class="text-[9px] text-slate-500 uppercase font-black mb-2 block">ID da Sala</label>
                 <input type="text" id="room-id" value="SALA_SEL_01" class="font-bold text-center mb-6">
-                
-                <label class="text-[9px] text-slate-500 uppercase font-black mb-2 block">Modo de Resposta</label>
+                <label class="text-[9px] text-slate-500 uppercase font-black mb-2 block">Modo de Operação</label>
                 <select id="comm-mode">
-                    <option value="both" selected>Enviar e Receber (Avatar Ativo)</option>
+                    <option value="both" selected>Enviar e Receber</option>
                     <option value="send">Apenas Enviar</option>
                     <option value="recv">Apenas Receber</option>
                 </select>
             </div>
-            <button onclick="closeModal('settings-modal')" class="mt-12 text-slate-500 uppercase border border-white/10 px-10 py-5 rounded-full font-bold text-xs">Sair do Painel</button>
+            <button onclick="closeModal('settings-modal')" class="mt-12 text-slate-500 uppercase border border-white/10 px-10 py-4 rounded-full font-bold">Sair</button>
         </div>
     </div>
 
@@ -272,14 +240,14 @@
             el.scrollTop = el.scrollHeight;
         }
 
-        const apiKey = ""; // Gemini API Key
+        // --- GEMINI API KEY INTEGRADA ---
+        const apiKey = "AIzaSyDGPHXlw0OBcFG8Np7GrdPt0n6nbqEcg54"; 
+
         let isSpeaking = false;
         let audioUnlocked = false;
-        let tasks = [];
         let db, auth;
         let userAuthenticated = false;
 
-        // --- CONFIGURAÇÃO FIREBASE VIA google-services.json ---
         const firebaseConfig = {
             apiKey: "AIzaSyC65cHjZ-VgavqzZyozGv5hOHZSwH5CUCA",
             authDomain: "meucontrolefinanceiro-93d7a.firebaseapp.com",
@@ -295,33 +263,26 @@
                 firebase.initializeApp(firebaseConfig);
                 auth = firebase.auth();
                 db = firebase.firestore();
-
-                const userCredential = await auth.signInAnonymously();
+                await auth.signInAnonymously();
                 userAuthenticated = true;
-                log("Sincronizado com Nuvem Firebase.");
+                log("Nuvem Conectada.");
                 setupMessageListener();
-            } catch (err) {
-                log("Erro Firebase: " + err.message, true);
-            }
+            } catch (err) { log("Erro Cloud: " + err.message, true); }
         }
 
-        // --- SISTEMA DE COMUNICAÇÃO ---
         function setupMessageListener() {
-            if (!userAuthenticated) return;
             const room = document.getElementById('room-id').value;
-
-            // Escutando mensagens da sala
             db.collection('artifacts').doc(internalAppId).collection('public').doc('data').collection('messages')
               .orderBy('timestamp', 'desc').limit(1)
               .onSnapshot(snap => {
                 const mode = document.getElementById('comm-mode').value;
                 if (mode === 'send') return;
-
                 snap.forEach(doc => {
                     const data = doc.data();
-                    // Só reage se a mensagem for nova e não for minha
+                    // Só lê se for uma mensagem nova de outro remetente
                     if (data.timestamp > Date.now() - 5000 && data.sender !== auth.currentUser.uid) {
-                        log(`Nova transmissão de ${data.room}`);
+                        log(`Mensagem de ${data.room}: ${data.content}`);
+                        if (!audioUnlocked) log("Áudio bloqueado! Toque na tela.", true);
                         speakText(data.content);
                     }
                 });
@@ -332,88 +293,41 @@
             const text = document.getElementById('msg-text').value;
             const room = document.getElementById('room-id').value;
             if(!text || !userAuthenticated) return;
-
             try {
-                log("Transmitindo sinal...");
                 await db.collection('artifacts').doc(internalAppId).collection('public').doc('data').collection('messages').add({
-                    content: text,
-                    room: room,
-                    sender: auth.currentUser.uid,
-                    timestamp: Date.now()
+                    content: text, room: room, sender: auth.currentUser.uid, timestamp: Date.now()
                 });
                 document.getElementById('msg-text').value = "";
                 toggleMsgInput();
-                log("Sinal enviado com sucesso.");
-            } catch (err) {
-                log("Erro envio: " + err.message, true);
-            }
+                log("Sinal enviado.");
+            } catch (err) { log("Erro Envio.", true); }
         }
 
-        // --- SISTEMA DE TAREFAS ---
-        function addTask() {
-            const desc = document.getElementById('task-desc').value;
-            const time = document.getElementById('task-time').value;
-            if(!desc || !time) return;
-            tasks.push({ id: Date.now(), desc, time, active: true });
-            document.getElementById('task-desc').value = "";
-            renderTasks();
-            log(`Alarme: ${desc} às ${time}`);
-        }
-
-        function removeTask(id) {
-            tasks = tasks.filter(t => t.id !== id);
-            renderTasks();
-        }
-
-        function renderTasks() {
-            const list = document.getElementById('tasks-list');
-            list.innerHTML = tasks.map((t) => `
-                <div class="task-card">
-                    <div class="flex flex-col">
-                        <span class="font-black text-white text-sm uppercase italic">${t.desc}</span>
-                        <span class="text-[10px] text-blue-400 font-bold">${t.time}</span>
-                    </div>
-                    <button onclick="removeTask(${t.id})" class="bg-red-900/50 text-red-500 px-3 py-2 rounded-lg text-[10px] font-bold">X</button>
-                </div>
-            `).join('');
-        }
-
-        function checkTasks() {
-            const now = new Date();
-            const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-            tasks.forEach((t) => {
-                if (t.time === currentTime && t.active) {
-                    t.active = false;
-                    speakText(`Selena informa. Horário da tarefa atingido: ${t.desc}`);
-                }
-            });
-        }
-        setInterval(checkTasks, 15000);
-
-        // --- VOZ E AVATAR ---
         function unlockAudio() {
             if (audioUnlocked) return;
             const context = new (window.AudioContext || window.webkitAudioContext)();
             if (context.state === 'suspended') context.resume();
             audioUnlocked = true;
-            log("Sincronia de voz ativa.");
-            speakText("Selena operacional. Aguardando comandos.");
+            log("Voz Sincronizada.");
+            speakText("Sistema operacional.");
         }
 
         async function speakText(text) {
-            if (isSpeaking || !audioUnlocked) return;
+            if (!audioUnlocked || !apiKey) return;
+            if (isSpeaking) return;
+            
             try {
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: `Como Selena, diga com tom masculino sério e autoritário: ${text}` }] }],
+                        contents: [{ parts: [{ text: `Diga seriamente: ${text}` }] }],
                         generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Zephyr" }, languageCode: "pt-BR" } } }
                     })
                 });
                 const d = await res.json();
                 const audio = d.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
                 if (audio) playAudio(audio);
-            } catch(e) { log("Erro TTS."); resetMouth(); }
+            } catch(e) { log("Falha na síntese vocal."); }
         }
 
         function playAudio(base64) {
@@ -422,26 +336,11 @@
             const status = document.getElementById('voice-status');
             const audio = new Audio(URL.createObjectURL(new Blob([new Uint8Array(atob(base64).split("").map(c => c.charCodeAt(0)))], { type: 'audio/wav' })));
             
-            const stopAnimation = () => {
-                isSpeaking = false;
-                mouth.classList.remove('is-talking-mouth');
-                status.style.display = 'none';
-            };
-
-            audio.onplay = () => {
-                mouth.classList.add('is-talking-mouth');
-                status.style.display = 'block';
-            };
-
-            audio.onended = stopAnimation;
-            audio.onerror = stopAnimation;
-            audio.play().catch(stopAnimation);
-        }
-
-        function resetMouth() {
-            isSpeaking = false;
-            document.getElementById('mouth-pixel').classList.remove('is-talking-mouth');
-            document.getElementById('voice-status').style.display = 'none';
+            const stop = () => { isSpeaking = false; mouth.classList.remove('is-talking-mouth'); status.style.display = 'none'; };
+            audio.onplay = () => { mouth.classList.add('is-talking-mouth'); status.style.display = 'block'; };
+            audio.onended = stop;
+            audio.onerror = stop;
+            audio.play().catch(stop);
         }
 
         function toggleMsgInput() {
@@ -450,7 +349,6 @@
             if(el.style.display === 'block') document.getElementById('msg-text').focus();
         }
 
-        // Animações aleatórias
         function lookAround() {
             if (isSpeaking) return;
             const rx = (Math.random() * 30) - 15;
@@ -474,8 +372,6 @@
             setInterval(() => { if(!isSpeaking) lookAround(); }, 4000);
             setInterval(() => { if(!isSpeaking) blink(); }, 5000);
         };
-
-        window.onerror = (m, u, l) => { log(`Erro: ${m}`, true); resetMouth(); return false; };
     </script>
 </body>
 </html>
