@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Selena Core AI v10.5 - Permission Fix & Sync</title>
+    <title>Selena Core AI v10.6 - Authentication & Protocol Fix</title>
     
     <!-- Bibliotecas Compatíveis -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -209,10 +209,10 @@
             <svg viewBox="0 0 24 24" class="w-12 h-12 fill-current"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
         </div>
         <p class="text-xs uppercase font-black tracking-[0.3em] text-blue-400 text-center px-10">Sincronizar Interface Selena</p>
-        <p class="text-[9px] text-slate-500 mt-4 uppercase">Aguardando Protocolo</p>
+        <p class="text-[9px] text-slate-500 mt-4 uppercase tracking-[0.2em]">Protocolo v10.6</p>
     </div>
 
-    <div id="debug-console">SELENA V10.5: Sistema de Comunicação Ativo.</div>
+    <div id="debug-console">SELENA V10.6: Núcleo de Segurança Ativo.</div>
     <div id="voice-status">Selena a falar...</div>
     <div id="user-badge" class="profile-badge">Visitante</div>
 
@@ -258,7 +258,7 @@
     </div>
 
     <!-- Modais -->
-    <div id="history-modal" class="modal"><div class="modal-content"><h2 class="text-white text-xl font-black mb-10 uppercase border-b border-white/5 pb-4 w-full text-center italic">Logs de Rede</h2><div id="activity-log" class="w-full max-w-md"></div><button onclick="closeModal('history-modal')" class="mt-8 text-slate-500 uppercase border border-white/10 px-10 py-5 rounded-full font-bold text-xs">Voltar</button></div></div>
+    <div id="history-modal" class="modal"><div class="modal-content"><h2 class="text-white text-xl font-black mb-10 uppercase border-b border-white/5 pb-4 w-full text-center italic">Monitorização</h2><div id="activity-log" class="w-full max-w-md"></div><button onclick="closeModal('history-modal')" class="mt-8 text-slate-500 uppercase border border-white/10 px-10 py-5 rounded-full font-bold text-xs">Voltar</button></div></div>
 
     <div id="settings-modal" class="modal">
         <div class="modal-content">
@@ -275,10 +275,18 @@
     </div>
 
     <script>
-        // --- AMBIENTE & CONFIGURAÇÃO ---
-        const apiKey = ""; // Injetar via window.apiKey ou Kodular para Gemini voz
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        // --- AMBIENTE & CONFIGURAÇÃO (FIREBASE RULES COMPLIANCE) ---
+        
+        // Tentativa de obter configurações das variáveis de ambiente injetadas
+        let firebaseConfig = {};
+        try {
+            firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        } catch (e) {
+            console.error("Config parsing error", e);
+        }
+
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'selena-core-v10';
+        const apiKey = ""; // Injetar via window.apiKey ou Kodular para voz Gemini
 
         function log(msg, isError = false) {
             const el = document.getElementById('debug-console');
@@ -296,35 +304,43 @@
         let currentUserName = localStorage.getItem('selena_op_name') || "Visitante";
         let messageQueue = [];
 
+        // REGRA 3: Autenticação ANTES de qualquer query
         async function initFirebase() {
             if (!firebaseConfig.apiKey) {
-                log("Erro: Configuração Firebase ausente no ambiente.", true);
+                log("Sistema Offline: Aguardando Configuração.", true);
                 return;
             }
+
             try {
-                // Inicialização robusta seguindo a Regra 3
-                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                
                 auth = firebase.auth();
                 db = firebase.firestore();
 
-                // Autenticação obrigatória antes de qualquer query
+                log("Iniciando Autenticação...");
+
+                // Prioridade para Token customizado
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await auth.signInWithCustomToken(__initial_auth_token);
                 } else {
                     await auth.signInAnonymously();
                 }
 
+                // Só chegamos aqui se o await acima tiver sucesso
                 userAuthenticated = true;
-                log("Rede: Autenticado com sucesso.");
+                log("Rede: Acesso Confirmado.");
+                
                 document.getElementById('user-badge').innerText = currentUserName;
                 document.getElementById('monitor-dot').style.backgroundColor = "#22c55e";
                 document.getElementById('monitor-dot').style.boxShadow = "0 0 15px #22c55e";
                 
-                // Ativar escuta após garantir auth
+                // Ativar escuta APÓS garantir auth
                 setupNetworkListener();
             } catch (err) { 
-                log("Falha de Permissão: Verifique as regras do Firestore.", true);
-                console.error("Firebase Error:", err);
+                log("Erro de Login: " + err.code, true);
+                console.error("Firebase Auth Error:", err);
             }
         }
 
@@ -342,7 +358,7 @@
 
         async function speak(text) {
             if (!apiKey) {
-                log("Voz: Gemini API Key ausente.", true);
+                log("Voz: Chave Gemini ausente.", true);
                 isSpeaking = false;
                 processQueue();
                 return;
@@ -366,7 +382,7 @@
                     const sampleRate = parseInt(audioPart.inlineData.mimeType.split('rate=')[1]) || 24000;
                     play(pcmToWav(audioPart.inlineData.data, sampleRate));
                 } else { 
-                    log("Voz: Falha na síntese.", true);
+                    log("Voz: Erro na síntese.", true);
                     isSpeaking = false; 
                     processQueue(); 
                 }
@@ -403,29 +419,32 @@
             if (!db || !userAuthenticated) return;
             const room = document.getElementById('room-id').value;
             
-            // Regra 1: Caminho estrito /artifacts/{appId}/public/data/{collectionName}
+            // REGRA 1: Caminho estrito /artifacts/{appId}/public/data/{collectionName}
             const path = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('messages');
             
+            // REGRA 2: Filtro simples sem complexidade
             path.onSnapshot(snap => {
                 snap.docChanges().forEach(change => {
                     if (change.type === "added") {
                         const data = change.doc.data();
-                        // Filtragem manual (Regra 2) para evitar erros de índice
-                        if (data.timestamp > Date.now() - 5000 && data.sender !== auth.currentUser.uid && data.room === room) {
+                        // Filtragem manual em memória para evitar erros de índice (Regra 2)
+                        if (data.timestamp > Date.now() - 6000 && data.sender !== auth.currentUser.uid && data.room === room) {
                             addToQueue(`${data.userName} informa: ${data.content}`);
                         }
                     }
                 });
             }, err => {
-                log("Erro Firestore: Acesso Negado.", true);
-                console.error("Snapshot error:", err);
+                log("Snapshot Error: " + err.code, true);
             });
         }
 
         async function sendMessage() {
             const text = document.getElementById('msg-text').value;
             const room = document.getElementById('room-id').value;
-            if(!text || !userAuthenticated) return;
+            if(!text || !userAuthenticated) {
+                log("Erro: Não autenticado ou texto vazio.", true);
+                return;
+            }
             try {
                 const path = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('messages');
                 await path.add({
@@ -437,8 +456,8 @@
                 });
                 document.getElementById('msg-text').value = "";
                 toggleMsgHUD();
-                log("Sinal transmitido.");
-            } catch (err) { log("Falha no envio.", true); }
+                log("Sinal enviado.");
+            } catch (err) { log("Erro Firestore: Envio negado.", true); }
         }
 
         function saveProfileSettings() {
@@ -447,7 +466,7 @@
                 currentUserName = val;
                 localStorage.setItem('selena_op_name', val);
                 document.getElementById('user-badge').innerText = val;
-                log("Perfil atualizado.");
+                log("Operador Identificado.");
             }
             closeModal('settings-modal');
         }
@@ -458,7 +477,7 @@
             if (context.state === 'suspended') context.resume();
             audioUnlocked = true;
             document.getElementById('audio-unlock-overlay').style.display = 'none';
-            initFirebase(); // Inicia Firebase após gesto do usuário
+            initFirebase(); // Inicia Firebase APÓS gesto do usuário (necessário para áudio e auth)
         }
 
         function toggleMsgHUD() {
