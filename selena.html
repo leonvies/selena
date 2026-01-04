@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Selena Core AI v10.1 - Tactical Mic Fix</title>
+    <title>Selena Core AI v10.3 - Stealth Mode (No Keys)</title>
     
     <!-- Bibliotecas Compatíveis -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -24,7 +24,7 @@
             height: 100vh;
             color: white;
             user-select: none;
-            -webkit-touch-callout: none; /* Impede menu de contexto no iOS/Android */
+            -webkit-touch-callout: none;
         }
 
         /* Efeito CRT Terminal */
@@ -45,15 +45,15 @@
             transform: translateX(-50%);
             width: 12px; height: 12px;
             border-radius: 50%;
-            background-color: #22c55e;
-            box-shadow: 0 0 15px #22c55e;
+            background-color: #64748b; /* Cinzento quando offline */
+            box-shadow: 0 0 15px #64748b;
             z-index: 100;
             animation: pulse-dot 2s infinite ease-in-out;
         }
 
         @keyframes pulse-dot {
-            0%, 100% { opacity: 0.4; transform: scale(0.9); }
-            50% { opacity: 1; transform: scale(1.2); }
+            0%, 100% { opacity: 0.4; transform: scale(0.9) translateX(-50%); }
+            50% { opacity: 1; transform: scale(1.2) translateX(-50%); }
         }
 
         #avatar-container {
@@ -153,7 +153,7 @@
             transition: all 0.2s ease;
             box-shadow: 0 10px 40px rgba(0,0,0,0.5);
             position: relative;
-            touch-action: none; /* Essencial para mobile */
+            touch-action: none;
             -webkit-user-select: none;
         }
         .mic-active { 
@@ -254,34 +254,34 @@
         }
     </style>
 </head>
-<body>
+<body onclick="unlockAudio()">
 
-    <!-- Overlay de Sincronia -->
+    <!-- Overlay de Sincronização -->
     <div id="audio-unlock-overlay" onclick="unlockAudio()">
         <div class="p-8 border-2 border-blue-500/30 rounded-full animate-pulse mb-6 text-blue-400">
             <svg viewBox="0 0 24 24" class="w-12 h-12 fill-current"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
         </div>
         <p class="text-xs uppercase font-black tracking-[0.3em] text-blue-400 text-center px-10">Sincronizar Protocolos Selena</p>
-        <p class="text-[9px] text-slate-500 mt-4 uppercase">Hardware Ready</p>
+        <p class="text-[9px] text-slate-500 mt-4 uppercase tracking-[0.2em]">Interface Segura v10.3</p>
     </div>
 
-    <div id="debug-console">SELENA V10.1: Link Tático Atualizado.</div>
-    <div id="voice-status">Selena Falando...</div>
-    <div id="user-badge" class="profile-badge">Visitante</div>
+    <div id="debug-console">SELENA V10.3: Protecção de Chaves Activa.</div>
+    <div id="voice-status">Selena a falar...</div>
+    <div id="user-badge" class="profile-badge">Operador Local</div>
 
     <div id="monitor-dot"></div>
 
-    <!-- HUD Mensagem -->
+    <!-- Interface HUD Mensagem -->
     <div id="msg-input-container">
         <p class="text-[10px] text-blue-400 font-bold mb-3 uppercase tracking-[0.2em]">Canais de Transmissão</p>
-        <input type="text" id="msg-text" placeholder="Digite a mensagem..." class="mb-4 text-sm">
+        <input type="text" id="msg-text" placeholder="Transmissão de texto..." class="mb-4 text-sm">
         <div class="flex gap-3">
             <button onclick="sendMessage()" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-xl text-[10px] uppercase tracking-widest shadow-lg">Transmitir</button>
             <button onclick="toggleMsgInput()" class="bg-slate-800 text-white px-5 rounded-xl text-[10px] uppercase font-bold">X</button>
         </div>
     </div>
 
-    <!-- UI Buttons -->
+    <!-- Botões Superiores -->
     <div class="btn-icon bell-btn" onclick="openModal('history-modal')">
         <svg viewBox="0 0 24 24" class="w-8 h-8 text-white fill-current"><path d="M12 22a2.01 2.01 0 002-2h-4a2.01 2.01 0 002 2zm6-6V10c0-3.07-1.63-5.64-4.5-6.32V3c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 4.36 6 6.92 6 10v6l-2 2v1h16v-1l-2-2z" /></svg>
     </div>
@@ -301,7 +301,7 @@
         </svg>
     </div>
 
-    <!-- Controles -->
+    <!-- Painel de Controlos -->
     <div class="controls-container">
         <div class="switch-container">
             <span class="switch-label" id="mode-text">IA LOCAL</span>
@@ -321,41 +321,28 @@
     </div>
 
     <!-- Modais -->
-    <div id="history-modal" class="modal"><div class="modal-content"><h2 class="text-white text-xl font-black mb-10 uppercase border-b border-white/5 pb-4 w-full text-center italic">Monitoramento</h2><div id="activity-log" class="w-full max-w-md"></div><button onclick="closeModal('history-modal')" class="mt-8 text-slate-500 uppercase border border-white/10 px-10 py-5 rounded-full font-bold">Voltar</button></div></div>
+    <div id="history-modal" class="modal"><div class="modal-content"><h2 class="text-white text-xl font-black mb-10 uppercase border-b border-white/5 pb-4 w-full text-center italic">Monitorização de Rede</h2><div id="activity-log" class="w-full max-w-md"></div><button onclick="closeModal('history-modal')" class="mt-8 text-slate-500 uppercase border border-white/10 px-10 py-5 rounded-full font-bold text-xs">Voltar</button></div></div>
 
     <div id="settings-modal" class="modal">
         <div class="modal-content">
-            <h2 class="text-white text-xl font-black mb-10 uppercase border-b border-white/5 pb-4 w-full text-center italic tracking-widest">Painel de Controlo</h2>
+            <h2 class="text-white text-xl font-black mb-10 uppercase border-b border-white/5 pb-4 w-full text-center italic tracking-widest">Definições</h2>
             <div class="bg-slate-900/60 p-6 rounded-3xl w-full max-w-md border border-white/5 mb-6">
-                <label class="text-[9px] text-blue-400 uppercase font-black mb-2 block">Operador</label>
-                <input type="text" id="user-id-input" placeholder="Seu Nome..." class="mb-6">
-                <label class="text-[9px] text-red-500 uppercase font-black mb-2 block">Sala</label>
+                <label class="text-[9px] text-blue-400 uppercase font-black mb-2 block">Identificação do Operador</label>
+                <input type="text" id="user-id-input" placeholder="Nome..." class="mb-6">
+                <label class="text-[9px] text-red-500 uppercase font-black mb-2 block">Sala (Frequência)</label>
                 <input type="text" id="room-id" value="SALA_SEL_01" class="font-bold text-center mb-6">
-                <button onclick="saveProfileSettings()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl text-xs uppercase shadow-xl active:scale-95 transition-all">Sincronizar</button>
+                <button onclick="saveProfileSettings()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl text-xs uppercase shadow-xl active:scale-95 transition-all">Sincronizar Perfil</button>
             </div>
-            <button onclick="closeModal('settings-modal')" class="mt-8 text-slate-500 uppercase border border-white/10 px-10 py-4 rounded-full font-bold">Fechar</button>
+            <button onclick="closeModal('settings-modal')" class="mt-8 text-slate-500 uppercase border border-white/10 px-10 py-4 rounded-full font-bold text-xs">Fechar</button>
         </div>
     </div>
 
     <script>
-        const apiKey = "AIzaSyDGPHXlw0OBcFG8Np7GrdPt0n6nbqEcg54";
-        const firebaseConfig = {
-            apiKey: "AIzaSyC65cHjZ-VgavqzZyozGv5hOHZSwH5CUCA",
-            authDomain: "meucontrolefinanceiro-93d7a.firebaseapp.com",
-            projectId: "meucontrolefinanceiro-93d7a",
-            storageBucket: "meucontrolefinanceiro-93d7a.firebasestorage.app",
-            messagingSenderId: "106677595700",
-            appId: "1:106677595700:android:7769ca467a6a4c17ae6461"
-        };
-        const internalAppId = "selena-core-v9";
-
-        let isSpeaking = false, isListening = false, audioUnlocked = false;
-        let db, auth, userAuthenticated = false;
-        let currentUserName = localStorage.getItem('selena_op_name') || "Operador Visitante";
-        let messageQueue = [], recognition;
-        
-        let recordingTimeLeft = 10.0;
-        let recordingInterval = null;
+        // --- SECURITY COMPLIANCE LAYER ---
+        // Removido qualquer rastro de chaves em texto puro.
+        const apiKey = ""; 
+        const firebaseConfig = JSON.parse(window.__firebase_config || '{}');
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'selena-core-v10';
 
         function log(msg, isError = false) {
             const el = document.getElementById('debug-console');
@@ -365,34 +352,48 @@
             el.scrollTop = el.scrollHeight;
         }
 
+        // Funções Globais de Interface
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        let isSpeaking = false, isListening = false, audioUnlocked = false;
+        let db, auth, userAuthenticated = false;
+        let currentUserName = localStorage.getItem('selena_op_name') || "Operador Visitante";
+        let messageQueue = [], recognition;
+        let recordingInterval = null;
+
         async function initFirebase() {
+            if (!firebaseConfig.apiKey) {
+                log("Firebase: Chaves em falta. Configure window.__firebase_config.", true);
+                return;
+            }
             try {
                 firebase.initializeApp(firebaseConfig);
                 auth = firebase.auth();
                 db = firebase.firestore();
                 await auth.signInAnonymously();
                 userAuthenticated = true;
-                log("Nuvem: Operacional.");
-                document.getElementById('user-badge').innerText = currentUserName;
+                log("Nuvem: Ligação segura estabelecida.");
+                document.getElementById('monitor-dot').style.backgroundColor = "#22c55e";
+                document.getElementById('monitor-dot').style.boxShadow = "0 0 15px #22c55e";
                 setupNetworkListener();
                 initSTT();
             } catch (err) { log("Erro Cloud: " + err.message, true); }
         }
 
-        // --- SISTEMA DE VOZ (STT) ---
+        // --- MOTOR DE VOZ (STT) ---
         function initSTT() {
             const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SR) { log("Motor STT Indisponível.", true); return; }
+            if (!SR) return;
             recognition = new SR();
             recognition.lang = 'pt-BR';
             recognition.continuous = false;
-            recognition.interimResults = false;
 
             recognition.onstart = () => {
                 isListening = true;
                 document.getElementById('mic-bubble').classList.add('mic-active');
                 document.getElementById('recording-timer').style.display = 'block';
-                log("Selena: Escutando...");
+                log("Selena: A ouvir...");
             };
 
             recognition.onresult = (event) => {
@@ -408,13 +409,12 @@
             };
         }
 
-        // --- MANIPULAÇÃO DO BOTÃO (FIXED) ---
+        // --- GESTÃO DE BOTÃO PointerDown/PointerUp ---
         const micBtn = document.getElementById('mic-bubble');
 
         function handlePressStart(e) {
             if (e.cancelable) e.preventDefault();
             const isNetwork = document.getElementById('tactical-mode-switch').checked;
-            
             if (isNetwork) {
                 toggleMsgInput();
             } else {
@@ -431,30 +431,28 @@
         }
 
         micBtn.addEventListener('pointerdown', handlePressStart);
-        window.addEventListener('pointerup', handlePressEnd); // Listener na window para garantir o release
+        window.addEventListener('pointerup', handlePressEnd);
 
         function startRecording() {
             try {
                 recognition.start();
-                recordingTimeLeft = 10.0;
+                let timeLeft = 10.0;
                 document.getElementById('recording-timer').innerText = "10.0s";
-                
                 recordingInterval = setInterval(() => {
-                    recordingTimeLeft -= 0.1;
-                    if (recordingTimeLeft <= 0) {
-                        recordingTimeLeft = 0;
+                    timeLeft -= 0.1;
+                    if (timeLeft <= 0) {
+                        timeLeft = 0;
                         stopRecording();
                     }
-                    document.getElementById('recording-timer').innerText = recordingTimeLeft.toFixed(1) + 's';
+                    document.getElementById('recording-timer').innerText = timeLeft.toFixed(1) + 's';
                 }, 100);
-            } catch(e) { log("Erro ao iniciar mic.", true); }
+            } catch(e) {}
         }
 
         function stopRecording() {
             if (!isListening) return;
             clearInterval(recordingInterval);
             recognition.stop();
-            log("Processando áudio...");
         }
 
         function stopListeningUI() {
@@ -464,7 +462,6 @@
             clearInterval(recordingInterval);
         }
 
-        // --- GESTÃO DE MODOS ---
         function handleModeChange() {
             const isNetwork = document.getElementById('tactical-mode-switch').checked;
             const modeText = document.getElementById('mode-text');
@@ -480,21 +477,22 @@
             }
         }
 
-        // --- CÉREBRO DA IA ---
+        // --- CÉREBRO IA ---
         async function processIA(text) {
+            if (!apiKey) { log("Gemini: Chave ausente. IA Desativada.", true); return; }
             try {
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{ parts: [{ text: text }] }],
-                        systemInstruction: { parts: [{ text: `Você é a Selena, uma IA tática séria. Responda de forma curta e em português.` }] }
+                        systemInstruction: { parts: [{ text: `És a Selena, uma IA tática concisa. Responde em português.` }] }
                     })
                 });
                 const data = await res.json();
                 const aiMsg = data.candidates?.[0]?.content?.parts?.[0]?.text;
                 if (aiMsg) addToQueue(aiMsg);
-            } catch (err) { log("Falha na IA.", true); }
+            } catch (err) { log("IA: Falha na resposta.", true); }
         }
 
         // --- MOTOR DE VOZ ---
@@ -510,6 +508,7 @@
         }
 
         async function speak(text) {
+            if (!apiKey) return;
             isSpeaking = true;
             try {
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
@@ -557,16 +556,16 @@
             audio.play().catch(stop);
         }
 
-        // --- FIREBASE REDE ---
         function setupNetworkListener() {
+            if (!db) return;
             const room = document.getElementById('room-id').value;
-            db.collection('artifacts').doc(internalAppId).collection('public').doc('data').collection('messages')
+            db.collection('artifacts').doc(appId).collection('public').doc('data').collection('messages')
               .onSnapshot(snap => {
                 snap.docChanges().forEach(change => {
                     if (change.type === "added") {
                         const data = change.doc.data();
                         if (data.timestamp > Date.now() - 3000 && data.sender !== auth.currentUser.uid && data.room === room) {
-                            addToQueue(`${data.userName} diz: ${data.content}`);
+                            addToQueue(`${data.userName} enviou sinal: ${data.content}`);
                         }
                     }
                 });
@@ -578,13 +577,13 @@
             const room = document.getElementById('room-id').value;
             if(!text || !userAuthenticated) return;
             try {
-                await db.collection('artifacts').doc(internalAppId).collection('public').doc('data').collection('messages').add({
+                await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('messages').add({
                     content: text, room: room, userName: currentUserName, sender: auth.currentUser.uid, timestamp: Date.now()
                 });
                 document.getElementById('msg-text').value = "";
                 toggleMsgInput();
                 log("Sinal enviado.");
-            } catch (err) { log("Erro Envio.", true); }
+            } catch (err) { log("Erro Transmissão.", true); }
         }
 
         function saveProfileSettings() {
@@ -593,8 +592,7 @@
                 currentUserName = val;
                 localStorage.setItem('selena_op_name', val);
                 document.getElementById('user-badge').innerText = val;
-                log("Perfil Sincronizado.");
-                addToQueue(`Operador ${val} identificado.`);
+                log("Perfil actualizado.");
             }
             closeModal('settings-modal');
         }
@@ -605,8 +603,7 @@
             if (context.state === 'suspended') context.resume();
             audioUnlocked = true;
             document.getElementById('audio-unlock-overlay').style.display = 'none';
-            log("Drivers de Som: Operacionais.");
-            addToQueue(`Selena operacional.`);
+            initFirebase();
         }
 
         function toggleMsgInput() {
@@ -616,7 +613,6 @@
         }
 
         window.onload = () => {
-            initFirebase();
             setInterval(() => { if(!isSpeaking && !isListening) {
                 const rx = (Math.random() * 30) - 15, ry = (Math.random() * 14) - 7;
                 document.getElementById('eye-l').style.transform = `translate(${rx}px, ${ry}px)`;
