@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Selena Core AI v10.4 - Network Comms Exclusive</title>
+    <title>Selena Core AI v10.5 - Permission Fix & Sync</title>
     
     <!-- Bibliotecas Compatíveis -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -209,9 +209,10 @@
             <svg viewBox="0 0 24 24" class="w-12 h-12 fill-current"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
         </div>
         <p class="text-xs uppercase font-black tracking-[0.3em] text-blue-400 text-center px-10">Sincronizar Interface Selena</p>
+        <p class="text-[9px] text-slate-500 mt-4 uppercase">Aguardando Protocolo</p>
     </div>
 
-    <div id="debug-console">SELENA V10.4: Modo de Comunicação de Rede Ativo.</div>
+    <div id="debug-console">SELENA V10.5: Sistema de Comunicação Ativo.</div>
     <div id="voice-status">Selena a falar...</div>
     <div id="user-badge" class="profile-badge">Visitante</div>
 
@@ -233,7 +234,7 @@
     </div>
 
     <div class="btn-icon settings-btn" onclick="openModal('settings-modal')">
-        <svg viewBox="0 0 24 24" class="w-8 h-8 text-white fill-current"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" /><path fill-rule="evenodd" d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 00-.986.57c-.166.115-.334.11-.444.03L6.21 5.155c-.78-.486-1.815-.297-2.363.44l-1.082 1.468c-.548.743-.44 1.803.242 2.374l1.01.847c.101.085.145.236.115.389a7.512 7.512 0 000 1.133c.03.153-.014.304-.115.389l-1.01.847c-.682.571-.79 1.631-.242 2.374l1.082 1.468c.548.737 1.583.926 2.363.44l1.112-.683c.11-.08.278-.085.444.03.295.203.62.393.986.57.182.088.278.228.298.348l.177 1.072c.151.904.933 1.567 1.85 1.567h1.844c.916 0 1.699-.663 1.85-1.567l.178-1.072c.02-.12.115-.26.297-.348.366-.177.691-.367.986-.57.166-.115.335-.11.444-.03l1.112.683c.78.486 1.815.297 2.363-.44l1.082-1.468c.548-.743.44-1.803-.242-2.374l-1.01-.847c-.101-.085-.145-.236-.115-.389a7.512 7.512 0 000-1.133c-.03-.153.014-.304.115.389l1.01-.847c.682-.571.79-1.631.242-2.374l-1.082-1.468c-.548-.737-1.583-.926-2.363-.44l-1.112.683c-.11.08-.278.085-.444-.03a7.493 7.493 0 00-.986-.57c-.182-.088-.278-.228-.298-.348l-.177-1.072c-.151-.904-.933-1.567-1.85-1.567h-1.844zM12 15.75a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z" clip-rule="evenodd" /></svg>
+        <svg viewBox="0 0 24 24" class="w-8 h-8 text-white fill-current"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" /><path fill-rule="evenodd" d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 00-.986.57c-.166.115-.334.11-.444.03L6.21 5.155c-.78-.486-1.815-.297-2.363.44l-1.082 1.468c-.548.743-.44 1.803.242 2.374l1.01.847c.101.085.145.236.115.389a7.512 7.512 0 000 1.133c.03.153-.014.304-.115.389l-1.01.847c-.682.571-.79 1.631-.242 2.374l1.082 1.468c.548.737 1.583.926 2.363.44l1.112-.683c.11-.08.278-.085.444.03.295.203.62.393.986.57.182.088.278.228.298.348l.177 1.072c.151.904.933 1.567 1.85 1.567h1.844c.916 0 1.699-.663 1.85-1.567l.178-1.072c.02-.12.115-.26.297-.348.366-.177.691-.367.986-.57.166-.115.335-.11.444-.03l1.112.683c.78.486 1.815.297 2.363-.44l1.082-1.468c.548-.743.44-1.803-.242-2.374l-1.01-.847c-.101-.085-.145-.236-.115-.389a7.512 7.512 0 000-1.133c-.03-.153.014-.304.115-.389l1.01-.847c.682-.571.79-1.631.242-2.374l-1.082-1.468c-.548-.737-1.583-.926-2.363-.44l-1.112.683c-.11.08-.278.085-.444-.03a7.493 7.493 0 00-.986-.57c-.182-.088-.278-.228-.298-.348l-.177-1.072c-.151-.904-.933-1.567-1.85-1.567h-1.844zM12 15.75a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z" clip-rule="evenodd" /></svg>
     </div>
 
     <!-- Avatar -->
@@ -274,9 +275,9 @@
     </div>
 
     <script>
-        // --- SECURITY & CONFIG ---
-        const apiKey = ""; // Injetar via window.apiKey ou Kodular
-        const firebaseConfig = JSON.parse(window.__firebase_config || '{}');
+        // --- AMBIENTE & CONFIGURAÇÃO ---
+        const apiKey = ""; // Injetar via window.apiKey ou Kodular para Gemini voz
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'selena-core-v10';
 
         function log(msg, isError = false) {
@@ -297,21 +298,34 @@
 
         async function initFirebase() {
             if (!firebaseConfig.apiKey) {
-                log("Aguardando configuração de rede...", true);
+                log("Erro: Configuração Firebase ausente no ambiente.", true);
                 return;
             }
             try {
-                firebase.initializeApp(firebaseConfig);
+                // Inicialização robusta seguindo a Regra 3
+                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
                 auth = firebase.auth();
                 db = firebase.firestore();
-                await auth.signInAnonymously();
+
+                // Autenticação obrigatória antes de qualquer query
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await auth.signInWithCustomToken(__initial_auth_token);
+                } else {
+                    await auth.signInAnonymously();
+                }
+
                 userAuthenticated = true;
-                log("Rede: Operacional.");
+                log("Rede: Autenticado com sucesso.");
                 document.getElementById('user-badge').innerText = currentUserName;
                 document.getElementById('monitor-dot').style.backgroundColor = "#22c55e";
                 document.getElementById('monitor-dot').style.boxShadow = "0 0 15px #22c55e";
+                
+                // Ativar escuta após garantir auth
                 setupNetworkListener();
-            } catch (err) { log("Erro Rede: " + err.message, true); }
+            } catch (err) { 
+                log("Falha de Permissão: Verifique as regras do Firestore.", true);
+                console.error("Firebase Error:", err);
+            }
         }
 
         // --- MOTOR DE VOZ (TTS) ---
@@ -328,7 +342,9 @@
 
         async function speak(text) {
             if (!apiKey) {
-                log("Gemini: Chave de voz ausente.", true);
+                log("Voz: Gemini API Key ausente.", true);
+                isSpeaking = false;
+                processQueue();
                 return;
             }
             isSpeaking = true;
@@ -349,7 +365,11 @@
                 if (audioPart) {
                     const sampleRate = parseInt(audioPart.inlineData.mimeType.split('rate=')[1]) || 24000;
                     play(pcmToWav(audioPart.inlineData.data, sampleRate));
-                } else { isSpeaking = false; processQueue(); }
+                } else { 
+                    log("Voz: Falha na síntese.", true);
+                    isSpeaking = false; 
+                    processQueue(); 
+                }
             } catch(e) { isSpeaking = false; processQueue(); }
         }
 
@@ -380,19 +400,25 @@
 
         // --- FIREBASE REDE ---
         function setupNetworkListener() {
-            if (!db) return;
+            if (!db || !userAuthenticated) return;
             const room = document.getElementById('room-id').value;
-            db.collection('artifacts').doc(appId).collection('public').doc('data').collection('messages')
-              .onSnapshot(snap => {
+            
+            // Regra 1: Caminho estrito /artifacts/{appId}/public/data/{collectionName}
+            const path = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('messages');
+            
+            path.onSnapshot(snap => {
                 snap.docChanges().forEach(change => {
                     if (change.type === "added") {
                         const data = change.doc.data();
-                        // Filtragem para mensagens de outros usuários na mesma sala
-                        if (data.timestamp > Date.now() - 3000 && data.sender !== auth.currentUser.uid && data.room === room) {
+                        // Filtragem manual (Regra 2) para evitar erros de índice
+                        if (data.timestamp > Date.now() - 5000 && data.sender !== auth.currentUser.uid && data.room === room) {
                             addToQueue(`${data.userName} informa: ${data.content}`);
                         }
                     }
                 });
+            }, err => {
+                log("Erro Firestore: Acesso Negado.", true);
+                console.error("Snapshot error:", err);
             });
         }
 
@@ -401,13 +427,18 @@
             const room = document.getElementById('room-id').value;
             if(!text || !userAuthenticated) return;
             try {
-                await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('messages').add({
-                    content: text, room: room, userName: currentUserName, sender: auth.currentUser.uid, timestamp: Date.now()
+                const path = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('messages');
+                await path.add({
+                    content: text, 
+                    room: room, 
+                    userName: currentUserName, 
+                    sender: auth.currentUser.uid, 
+                    timestamp: Date.now()
                 });
                 document.getElementById('msg-text').value = "";
                 toggleMsgHUD();
                 log("Sinal transmitido.");
-            } catch (err) { log("Falha no sinal.", true); }
+            } catch (err) { log("Falha no envio.", true); }
         }
 
         function saveProfileSettings() {
@@ -416,7 +447,7 @@
                 currentUserName = val;
                 localStorage.setItem('selena_op_name', val);
                 document.getElementById('user-badge').innerText = val;
-                log("Identidade atualizada.");
+                log("Perfil atualizado.");
             }
             closeModal('settings-modal');
         }
@@ -427,7 +458,7 @@
             if (context.state === 'suspended') context.resume();
             audioUnlocked = true;
             document.getElementById('audio-unlock-overlay').style.display = 'none';
-            initFirebase();
+            initFirebase(); // Inicia Firebase após gesto do usuário
         }
 
         function toggleMsgHUD() {
