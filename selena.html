@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Selena Core AI v10.3 - Stealth Mode (No Keys)</title>
+    <title>Selena Core AI v10.4 - Network Comms Exclusive</title>
     
     <!-- Bibliotecas Compatíveis -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -45,7 +45,7 @@
             transform: translateX(-50%);
             width: 12px; height: 12px;
             border-radius: 50%;
-            background-color: #64748b; /* Cinzento quando offline */
+            background-color: #64748b; 
             box-shadow: 0 0 15px #64748b;
             z-index: 100;
             animation: pulse-dot 2s infinite ease-in-out;
@@ -80,7 +80,7 @@
 
         #msg-input-container {
             position: fixed;
-            bottom: 220px;
+            bottom: 140px;
             left: 50%;
             transform: translateX(-50%);
             width: 85%;
@@ -106,41 +106,6 @@
             z-index: 60;
         }
 
-        .switch-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-        }
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 28px;
-        }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #1e293b;
-            transition: .4s;
-            border-radius: 34px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 20px; width: 20px;
-            left: 4px; bottom: 3px;
-            background-color: #64748b;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        input:checked + .slider { background-color: #3b82f6; }
-        input:checked + .slider:before { transform: translateX(22px); background-color: white; }
-        .switch-label { font-size: 8px; font-weight: bold; text-transform: uppercase; color: #64748b; letter-spacing: 1px; }
-
         #mic-bubble {
             width: 85px; height: 85px;
             border-radius: 50%;
@@ -148,31 +113,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 2px solid rgba(255,255,255,0.1);
+            border: 2px solid #3b82f6;
             cursor: pointer;
             transition: all 0.2s ease;
             box-shadow: 0 10px 40px rgba(0,0,0,0.5);
             position: relative;
-            touch-action: none;
-            -webkit-user-select: none;
         }
-        .mic-active { 
-            border-color: #ef4444 !important; 
-            background: rgba(239, 68, 68, 0.3) !important; 
-            transform: scale(1.15);
-            box-shadow: 0 0 30px rgba(239, 68, 68, 0.4);
-        }
-
-        #recording-timer {
-            position: absolute;
-            top: -30px;
-            font-size: 11px;
-            font-weight: 900;
-            color: #ef4444;
-            display: none;
-            text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
-            letter-spacing: 1px;
-        }
+        #mic-bubble:active { transform: scale(0.9); background: #1e3a8a; }
 
         .modal {
             display: none;
@@ -261,33 +208,32 @@
         <div class="p-8 border-2 border-blue-500/30 rounded-full animate-pulse mb-6 text-blue-400">
             <svg viewBox="0 0 24 24" class="w-12 h-12 fill-current"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
         </div>
-        <p class="text-xs uppercase font-black tracking-[0.3em] text-blue-400 text-center px-10">Sincronizar Protocolos Selena</p>
-        <p class="text-[9px] text-slate-500 mt-4 uppercase tracking-[0.2em]">Interface Segura v10.3</p>
+        <p class="text-xs uppercase font-black tracking-[0.3em] text-blue-400 text-center px-10">Sincronizar Interface Selena</p>
     </div>
 
-    <div id="debug-console">SELENA V10.3: Protecção de Chaves Activa.</div>
+    <div id="debug-console">SELENA V10.4: Modo de Comunicação de Rede Ativo.</div>
     <div id="voice-status">Selena a falar...</div>
-    <div id="user-badge" class="profile-badge">Operador Local</div>
+    <div id="user-badge" class="profile-badge">Visitante</div>
 
     <div id="monitor-dot"></div>
 
-    <!-- Interface HUD Mensagem -->
+    <!-- HUD Mensagem -->
     <div id="msg-input-container">
-        <p class="text-[10px] text-blue-400 font-bold mb-3 uppercase tracking-[0.2em]">Canais de Transmissão</p>
-        <input type="text" id="msg-text" placeholder="Transmissão de texto..." class="mb-4 text-sm">
+        <p class="text-[10px] text-blue-400 font-bold mb-3 uppercase tracking-[0.2em]">Transmitir Mensagem de Texto</p>
+        <input type="text" id="msg-text" placeholder="Escreve a tua mensagem..." class="mb-4 text-sm">
         <div class="flex gap-3">
             <button onclick="sendMessage()" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-xl text-[10px] uppercase tracking-widest shadow-lg">Transmitir</button>
-            <button onclick="toggleMsgInput()" class="bg-slate-800 text-white px-5 rounded-xl text-[10px] uppercase font-bold">X</button>
+            <button onclick="toggleMsgHUD()" class="bg-slate-800 text-white px-5 rounded-xl text-[10px] uppercase font-bold">X</button>
         </div>
     </div>
 
-    <!-- Botões Superiores -->
+    <!-- Botões -->
     <div class="btn-icon bell-btn" onclick="openModal('history-modal')">
         <svg viewBox="0 0 24 24" class="w-8 h-8 text-white fill-current"><path d="M12 22a2.01 2.01 0 002-2h-4a2.01 2.01 0 002 2zm6-6V10c0-3.07-1.63-5.64-4.5-6.32V3c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 4.36 6 6.92 6 10v6l-2 2v1h16v-1l-2-2z" /></svg>
     </div>
 
     <div class="btn-icon settings-btn" onclick="openModal('settings-modal')">
-        <svg viewBox="0 0 24 24" class="w-8 h-8 text-white fill-current"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" /><path fill-rule="evenodd" d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 00-.986.57c-.166.115-.334.11-.444.03L6.21 5.155c-.78-.486-1.815-.297-2.363.44l-1.082 1.468c-.548.743-.44 1.803.242 2.374l1.01.847c.101.085.145.236.115.389a7.512 7.512 0 000 1.133c.03.153-.014.304-.115.389l-1.01.847c-.682.571-.79 1.631-.242 2.374l1.082 1.468c.548.737 1.583.926 2.363.44l1.112-.683c.11-.08.278-.085.444.03.295.203.62.393.986.57.182.088.278.228.298.348l.177 1.072c.151.904.933 1.567 1.85 1.567h1.844c.916 0 1.699-.663 1.85-1.567l.178-1.072c.02-.12.115-.26.297-.348.366-.177.691-.367.986-.57.166-.115.335-.11.444-.03l1.112.683c.78.486 1.815.297 2.363-.44l1.082-1.468c.548-.743.44-1.803-.242-2.374l-1.01-.847c-.101-.085-.145-.236-.115-.389a7.512 7.512 0 000-1.133c-.03-.153.014-.304.115-.389l1.01-.847c.682-.571.79-1.631.242-2.374l-1.082-1.468c-.548-.737-1.583-.926-2.363-.44l-1.112.683c-.11.08-.278.085-.444-.03a7.493 7.493 0 00-.986-.57c-.182-.088-.278-.228-.298-.348l-.177-1.072c-.151-.904-.933-1.567-1.85-1.567h-1.844zM12 15.75a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z" clip-rule="evenodd" /></svg>
+        <svg viewBox="0 0 24 24" class="w-8 h-8 text-white fill-current"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" /><path fill-rule="evenodd" d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 00-.986.57c-.166.115-.334.11-.444.03L6.21 5.155c-.78-.486-1.815-.297-2.363.44l-1.082 1.468c-.548.743-.44 1.803.242 2.374l1.01.847c.101.085.145.236.115.389a7.512 7.512 0 000 1.133c.03.153-.014.304-.115.389l-1.01.847c-.682.571-.79 1.631-.242 2.374l1.082 1.468c.548.737 1.583.926 2.363.44l1.112-.683c.11-.08.278-.085.444.03.295.203.62.393.986.57.182.088.278.228.298.348l.177 1.072c.151.904.933 1.567 1.85 1.567h1.844c.916 0 1.699-.663 1.85-1.567l.178-1.072c.02-.12.115-.26.297-.348.366-.177.691-.367.986-.57.166-.115.335-.11.444-.03l1.112.683c.78.486 1.815.297 2.363-.44l1.082-1.468c.548-.743.44-1.803-.242-2.374l-1.01-.847c-.101-.085-.145-.236-.115-.389a7.512 7.512 0 000-1.133c-.03-.153.014-.304.115.389l1.01-.847c.682-.571.79-1.631.242-2.374l-1.082-1.468c-.548-.737-1.583-.926-2.363-.44l-1.112.683c-.11.08-.278.085-.444-.03a7.493 7.493 0 00-.986-.57c-.182-.088-.278-.228-.298-.348l-.177-1.072c-.151-.904-.933-1.567-1.85-1.567h-1.844zM12 15.75a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z" clip-rule="evenodd" /></svg>
     </div>
 
     <!-- Avatar -->
@@ -301,35 +247,25 @@
         </svg>
     </div>
 
-    <!-- Painel de Controlos -->
+    <!-- Controlos -->
     <div class="controls-container">
-        <div class="switch-container">
-            <span class="switch-label" id="mode-text">IA LOCAL</span>
-            <label class="switch">
-                <input type="checkbox" id="tactical-mode-switch" onchange="handleModeChange()">
-                <span class="slider"></span>
-            </label>
-        </div>
-
-        <div id="mic-bubble" oncontextmenu="return false;">
-            <div id="recording-timer">10.0s</div>
-            <svg viewBox="0 0 24 24" class="w-10 h-10 text-white/50 fill-current" id="mic-icon">
-                <path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z" />
-                <path d="M19 10v1a7 7 0 01-14 0v-1M12 19v4M8 23h8" />
+        <div id="mic-bubble" onclick="toggleMsgHUD()">
+            <svg viewBox="0 0 24 24" class="w-10 h-10 text-white/50 fill-current">
+                <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
             </svg>
         </div>
     </div>
 
     <!-- Modais -->
-    <div id="history-modal" class="modal"><div class="modal-content"><h2 class="text-white text-xl font-black mb-10 uppercase border-b border-white/5 pb-4 w-full text-center italic">Monitorização de Rede</h2><div id="activity-log" class="w-full max-w-md"></div><button onclick="closeModal('history-modal')" class="mt-8 text-slate-500 uppercase border border-white/10 px-10 py-5 rounded-full font-bold text-xs">Voltar</button></div></div>
+    <div id="history-modal" class="modal"><div class="modal-content"><h2 class="text-white text-xl font-black mb-10 uppercase border-b border-white/5 pb-4 w-full text-center italic">Logs de Rede</h2><div id="activity-log" class="w-full max-w-md"></div><button onclick="closeModal('history-modal')" class="mt-8 text-slate-500 uppercase border border-white/10 px-10 py-5 rounded-full font-bold text-xs">Voltar</button></div></div>
 
     <div id="settings-modal" class="modal">
         <div class="modal-content">
-            <h2 class="text-white text-xl font-black mb-10 uppercase border-b border-white/5 pb-4 w-full text-center italic tracking-widest">Definições</h2>
+            <h2 class="text-white text-xl font-black mb-10 uppercase border-b border-white/5 pb-4 w-full text-center italic tracking-widest">Painel Operacional</h2>
             <div class="bg-slate-900/60 p-6 rounded-3xl w-full max-w-md border border-white/5 mb-6">
                 <label class="text-[9px] text-blue-400 uppercase font-black mb-2 block">Identificação do Operador</label>
-                <input type="text" id="user-id-input" placeholder="Nome..." class="mb-6">
-                <label class="text-[9px] text-red-500 uppercase font-black mb-2 block">Sala (Frequência)</label>
+                <input type="text" id="user-id-input" placeholder="Teu Nome..." class="mb-6">
+                <label class="text-[9px] text-red-500 uppercase font-black mb-2 block">Sala de Rede</label>
                 <input type="text" id="room-id" value="SALA_SEL_01" class="font-bold text-center mb-6">
                 <button onclick="saveProfileSettings()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl text-xs uppercase shadow-xl active:scale-95 transition-all">Sincronizar Perfil</button>
             </div>
@@ -338,9 +274,8 @@
     </div>
 
     <script>
-        // --- SECURITY COMPLIANCE LAYER ---
-        // Removido qualquer rastro de chaves em texto puro.
-        const apiKey = ""; 
+        // --- SECURITY & CONFIG ---
+        const apiKey = ""; // Injetar via window.apiKey ou Kodular
         const firebaseConfig = JSON.parse(window.__firebase_config || '{}');
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'selena-core-v10';
 
@@ -352,19 +287,17 @@
             el.scrollTop = el.scrollHeight;
         }
 
-        // Funções Globais de Interface
         function openModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-        let isSpeaking = false, isListening = false, audioUnlocked = false;
+        let isSpeaking = false, audioUnlocked = false;
         let db, auth, userAuthenticated = false;
-        let currentUserName = localStorage.getItem('selena_op_name') || "Operador Visitante";
-        let messageQueue = [], recognition;
-        let recordingInterval = null;
+        let currentUserName = localStorage.getItem('selena_op_name') || "Visitante";
+        let messageQueue = [];
 
         async function initFirebase() {
             if (!firebaseConfig.apiKey) {
-                log("Firebase: Chaves em falta. Configure window.__firebase_config.", true);
+                log("Aguardando configuração de rede...", true);
                 return;
             }
             try {
@@ -373,129 +306,15 @@
                 db = firebase.firestore();
                 await auth.signInAnonymously();
                 userAuthenticated = true;
-                log("Nuvem: Ligação segura estabelecida.");
+                log("Rede: Operacional.");
+                document.getElementById('user-badge').innerText = currentUserName;
                 document.getElementById('monitor-dot').style.backgroundColor = "#22c55e";
                 document.getElementById('monitor-dot').style.boxShadow = "0 0 15px #22c55e";
                 setupNetworkListener();
-                initSTT();
-            } catch (err) { log("Erro Cloud: " + err.message, true); }
+            } catch (err) { log("Erro Rede: " + err.message, true); }
         }
 
-        // --- MOTOR DE VOZ (STT) ---
-        function initSTT() {
-            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SR) return;
-            recognition = new SR();
-            recognition.lang = 'pt-BR';
-            recognition.continuous = false;
-
-            recognition.onstart = () => {
-                isListening = true;
-                document.getElementById('mic-bubble').classList.add('mic-active');
-                document.getElementById('recording-timer').style.display = 'block';
-                log("Selena: A ouvir...");
-            };
-
-            recognition.onresult = (event) => {
-                const text = event.results[0][0].transcript;
-                log(`Captado: "${text}"`);
-                processIA(text);
-            };
-
-            recognition.onend = () => { stopListeningUI(); };
-            recognition.onerror = (e) => { 
-                if(e.error !== 'no-speech') log("Erro Áudio: " + e.error, true);
-                stopListeningUI(); 
-            };
-        }
-
-        // --- GESTÃO DE BOTÃO PointerDown/PointerUp ---
-        const micBtn = document.getElementById('mic-bubble');
-
-        function handlePressStart(e) {
-            if (e.cancelable) e.preventDefault();
-            const isNetwork = document.getElementById('tactical-mode-switch').checked;
-            if (isNetwork) {
-                toggleMsgInput();
-            } else {
-                if (isSpeaking || isListening) return;
-                startRecording();
-            }
-        }
-
-        function handlePressEnd(e) {
-            const isNetwork = document.getElementById('tactical-mode-switch').checked;
-            if (!isNetwork && isListening) {
-                stopRecording();
-            }
-        }
-
-        micBtn.addEventListener('pointerdown', handlePressStart);
-        window.addEventListener('pointerup', handlePressEnd);
-
-        function startRecording() {
-            try {
-                recognition.start();
-                let timeLeft = 10.0;
-                document.getElementById('recording-timer').innerText = "10.0s";
-                recordingInterval = setInterval(() => {
-                    timeLeft -= 0.1;
-                    if (timeLeft <= 0) {
-                        timeLeft = 0;
-                        stopRecording();
-                    }
-                    document.getElementById('recording-timer').innerText = timeLeft.toFixed(1) + 's';
-                }, 100);
-            } catch(e) {}
-        }
-
-        function stopRecording() {
-            if (!isListening) return;
-            clearInterval(recordingInterval);
-            recognition.stop();
-        }
-
-        function stopListeningUI() {
-            isListening = false;
-            document.getElementById('mic-bubble').classList.remove('mic-active');
-            document.getElementById('recording-timer').style.display = 'none';
-            clearInterval(recordingInterval);
-        }
-
-        function handleModeChange() {
-            const isNetwork = document.getElementById('tactical-mode-switch').checked;
-            const modeText = document.getElementById('mode-text');
-            const micIcon = document.getElementById('mic-icon');
-            if (isNetwork) {
-                modeText.innerText = "MODO REDE";
-                modeText.style.color = "#3b82f6";
-                micIcon.innerHTML = `<path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />`;
-            } else {
-                modeText.innerText = "IA LOCAL";
-                modeText.style.color = "#64748b";
-                micIcon.innerHTML = `<path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z" /><path d="M19 10v1a7 7 0 01-14 0v-1M12 19v4M8 23h8" />`;
-            }
-        }
-
-        // --- CÉREBRO IA ---
-        async function processIA(text) {
-            if (!apiKey) { log("Gemini: Chave ausente. IA Desativada.", true); return; }
-            try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: text }] }],
-                        systemInstruction: { parts: [{ text: `És a Selena, uma IA tática concisa. Responde em português.` }] }
-                    })
-                });
-                const data = await res.json();
-                const aiMsg = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (aiMsg) addToQueue(aiMsg);
-            } catch (err) { log("IA: Falha na resposta.", true); }
-        }
-
-        // --- MOTOR DE VOZ ---
+        // --- MOTOR DE VOZ (TTS) ---
         function addToQueue(text) {
             messageQueue.push(text);
             processQueue();
@@ -503,12 +322,15 @@
 
         async function processQueue() {
             if (isSpeaking || messageQueue.length === 0 || !audioUnlocked) return;
-            const next = messageQueue.shift();
-            await speak(next);
+            const nextText = messageQueue.shift();
+            await speak(nextText);
         }
 
         async function speak(text) {
-            if (!apiKey) return;
+            if (!apiKey) {
+                log("Gemini: Chave de voz ausente.", true);
+                return;
+            }
             isSpeaking = true;
             try {
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
@@ -556,6 +378,7 @@
             audio.play().catch(stop);
         }
 
+        // --- FIREBASE REDE ---
         function setupNetworkListener() {
             if (!db) return;
             const room = document.getElementById('room-id').value;
@@ -564,8 +387,9 @@
                 snap.docChanges().forEach(change => {
                     if (change.type === "added") {
                         const data = change.doc.data();
+                        // Filtragem para mensagens de outros usuários na mesma sala
                         if (data.timestamp > Date.now() - 3000 && data.sender !== auth.currentUser.uid && data.room === room) {
-                            addToQueue(`${data.userName} enviou sinal: ${data.content}`);
+                            addToQueue(`${data.userName} informa: ${data.content}`);
                         }
                     }
                 });
@@ -581,9 +405,9 @@
                     content: text, room: room, userName: currentUserName, sender: auth.currentUser.uid, timestamp: Date.now()
                 });
                 document.getElementById('msg-text').value = "";
-                toggleMsgInput();
-                log("Sinal enviado.");
-            } catch (err) { log("Erro Transmissão.", true); }
+                toggleMsgHUD();
+                log("Sinal transmitido.");
+            } catch (err) { log("Falha no sinal.", true); }
         }
 
         function saveProfileSettings() {
@@ -592,7 +416,7 @@
                 currentUserName = val;
                 localStorage.setItem('selena_op_name', val);
                 document.getElementById('user-badge').innerText = val;
-                log("Perfil actualizado.");
+                log("Identidade atualizada.");
             }
             closeModal('settings-modal');
         }
@@ -606,23 +430,23 @@
             initFirebase();
         }
 
-        function toggleMsgInput() {
+        function toggleMsgHUD() {
             const el = document.getElementById('msg-input-container');
             el.style.display = (el.style.display === 'block') ? 'none' : 'block';
             if(el.style.display === 'block') document.getElementById('msg-text').focus();
         }
 
         window.onload = () => {
-            setInterval(() => { if(!isSpeaking && !isListening) {
+            setInterval(() => { 
                 const rx = (Math.random() * 30) - 15, ry = (Math.random() * 14) - 7;
                 document.getElementById('eye-l').style.transform = `translate(${rx}px, ${ry}px)`;
                 document.getElementById('eye-r').style.transform = `translate(${rx}px, ${ry}px)`;
-            }}, 4000);
-            setInterval(() => { if(!isSpeaking) {
+            }, 4000);
+            setInterval(() => { 
                 const elL = document.getElementById('eye-l'), elR = document.getElementById('eye-r');
                 elL.classList.add('blink'); elR.classList.add('blink');
                 setTimeout(() => { elL.classList.remove('blink'); elR.classList.remove('blink'); }, 200);
-            }}, 5000);
+            }, 5000);
         };
     </script>
 </body>
