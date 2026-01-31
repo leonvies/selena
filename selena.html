@@ -1,503 +1,583 @@
 <!DOCTYPE html>
-<html lang="pt-pt">
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Selena Core AI v10.6 - Authentication & Protocol Fix</title>
-    
-    <!-- Bibliotecas Compatíveis -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <title>Tetris Kodular - Audio Fix Edition</title>
+    <!-- Bibliotecas Necessárias -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
     <style>
-        body { 
-            margin: 0; 
-            overflow: hidden; 
-            background-color: #020617; 
-            font-family: 'Courier New', Courier, monospace;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            color: white;
-            user-select: none;
-            -webkit-touch-callout: none;
+        /* =========================================
+           CONFIGURAÇÃO DE TEMA E ANIMAÇÕES
+           ========================================= */
+        :root {
+            --bg-custom: url('wp4281782.jpg'); 
+            --board-opacity: 0.5;
         }
 
-        /* Efeito CRT Terminal */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        @keyframes dust-puff {
+            0% { transform: translateY(0) scale(0.5); opacity: 0; }
+            50% { opacity: 0.5; }
+            100% { transform: translateY(-20px) scale(1.5); opacity: 0; }
+        }
+
+        @keyframes rotate-flash {
+            0% { filter: brightness(1); transform: scale(1); }
+            50% { filter: brightness(2); transform: scale(1.05); }
+            100% { filter: brightness(1); transform: scale(1); }
+        }
+
+        .shake-active { animation: shake 0.1s infinite; }
+        .piece-rotate-effect { animation: rotate-flash 0.15s ease-out; }
+
+        .dust-particle {
+            position: absolute;
+            bottom: 0;
+            width: 8px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: dust-puff 0.4s ease-out forwards;
+        }
+
+        body { 
+            background: #020617; 
+            background-image: var(--bg-custom);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            overscroll-behavior-y: contain; 
+            position: fixed; 
+            width: 100%; height: 100%;
+            margin: 0; padding: 0;
+            overflow: hidden;
+            font-family: sans-serif;
+        }
+
         body::after {
             content: "";
             position: absolute;
-            inset: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
-            background-size: 100% 4px;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0.9));
+            z-index: -1;
             pointer-events: none;
-            z-index: 10;
         }
 
-        #monitor-dot {
-            position: fixed;
-            top: 25px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 12px; height: 12px;
-            border-radius: 50%;
-            background-color: #64748b; 
-            box-shadow: 0 0 15px #64748b;
-            z-index: 100;
-            animation: pulse-dot 2s infinite ease-in-out;
-        }
+        * { -webkit-tap-highlight-color: transparent; }
 
-        @keyframes pulse-dot {
-            0%, 100% { opacity: 0.4; transform: scale(0.9) translateX(-50%); }
-            50% { opacity: 1; transform: scale(1.2) translateX(-50%); }
-        }
-
-        #avatar-container {
-            width: 380px; height: 380px;
-            position: relative;
-            z-index: 5;
-        }
-
-        .eye { transform-origin: center; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
-        .blink { animation: blink-anim 0.2s ease-in-out forwards; }
-        @keyframes blink-anim { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.05); } }
-
-        @keyframes natural-talk {
-            0%, 100% { height: 8px; width: 80px; transform: translateY(0); }
-            25% { height: 32px; width: 72px; transform: translateY(-12px); }
-            50% { height: 20px; width: 88px; transform: translateY(-6px); }
-            75% { height: 48px; width: 64px; transform: translateY(-18px); }
-        }
-        .is-talking-mouth { animation: natural-talk 0.3s infinite steps(3); }
-
-        .btn-icon { position: absolute; top: 25px; z-index: 60; cursor: pointer; opacity: 0.7; transform: scale(1.2); }
-        .bell-btn { left: 25px; }
-        .settings-btn { right: 25px; }
-
-        #msg-input-container {
-            position: fixed;
-            bottom: 140px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 85%;
-            max-width: 400px;
-            background: rgba(15, 23, 42, 0.98);
-            border: 2px solid #334155;
-            padding: 18px;
-            border-radius: 24px;
-            z-index: 100;
-            display: none;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-            backdrop-filter: blur(10px);
-        }
-
-        .controls-container {
-            position: fixed;
-            bottom: 40px;
-            right: 30px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-            z-index: 60;
-        }
-
-        #mic-bubble {
-            width: 85px; height: 85px;
-            border-radius: 50%;
-            background: rgba(15, 23, 42, 0.95);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid #3b82f6;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(20, 1fr);
+            gap: 1px;
+            background-color: rgba(15, 23, 42, var(--board-opacity));
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
             position: relative;
         }
-        #mic-bubble:active { transform: scale(0.9); background: #1e3a8a; }
 
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(2, 6, 23, 0.99);
-            z-index: 200;
-            overflow-y: auto;
-            backdrop-filter: blur(20px);
-        }
-        .modal.active { display: block; }
-        .modal-content { min-height: 100vh; padding: 40px 20px 120px; display: flex; flex-direction: column; align-items: center; }
-
-        #debug-console {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 90px;
-            background: #000;
-            color: #0f0;
-            font-size: 8px;
-            padding: 10px;
-            overflow-y: auto;
-            z-index: 2000;
-            pointer-events: none;
-            opacity: 0.8;
-            border-top: 2px solid #22c55e;
+        .bezel-metal {
+            background: rgba(15, 23, 42, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
         }
 
-        input, select {
-            background: #000;
-            border: 2px solid #1e293b;
-            padding: 14px;
-            border-radius: 14px;
-            color: white;
-            width: 100%;
-            outline: none;
+        .btn-3d-rotate {
+            background: linear-gradient(145deg, #991b1b, #450a0a);
+            border: 4px solid #1f2937;
+            box-shadow: 0 12px 0 #1a0505, 0 15px 25px rgba(0,0,0,0.7), inset 0 4px 6px rgba(255,255,255,0.2);
+            transition: all 0.05s ease-out;
+            position: relative; top: 0;
         }
 
-        #voice-status {
-            position: fixed;
-            bottom: 110px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 9px;
-            text-transform: uppercase;
-            font-weight: bold;
-            color: #3b82f6;
-            letter-spacing: 0.2em;
-            display: none;
+        .btn-3d-rotate:active:not(:disabled) {
+            top: 10px;
+            box-shadow: 0 2px 0 #1a0505, 0 5px 15px rgba(0,0,0,0.5);
         }
 
-        #audio-unlock-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(2,6,35,0.98);
-            z-index: 3000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
+        .bolt-btn {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            transition: all 0.2s;
         }
-
-        .profile-badge {
-            position: fixed;
-            top: 75px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 10px;
-            font-weight: bold;
-            color: #4ade80;
-            background: rgba(0,0,0,0.5);
-            padding: 4px 12px;
-            border-radius: 20px;
-            border: 1px solid rgba(74,222,128,0.3);
-            z-index: 50;
+        .bolt-btn:active:not(:disabled) {
+            transform: scale(0.9);
+            background: rgba(251, 191, 36, 0.2);
+        }
+        .bolt-btn:disabled {
+            opacity: 0.3;
+            filter: grayscale(1);
         }
     </style>
 </head>
-<body onclick="unlockAudio()">
+<body>
+    <div id="root" style="position: relative; z-index: 10;"></div>
 
-    <!-- Overlay de Sincronização -->
-    <div id="audio-unlock-overlay" onclick="unlockAudio()">
-        <div class="p-8 border-2 border-blue-500/30 rounded-full animate-pulse mb-6 text-blue-400">
-            <svg viewBox="0 0 24 24" class="w-12 h-12 fill-current"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
-        </div>
-        <p class="text-xs uppercase font-black tracking-[0.3em] text-blue-400 text-center px-10">Sincronizar Interface Selena</p>
-        <p class="text-[9px] text-slate-500 mt-4 uppercase tracking-[0.2em]">Protocolo v10.6</p>
-    </div>
+    <script type="text/babel">
+        const { useState, useEffect, useCallback, useRef, useMemo } = React;
 
-    <div id="debug-console">SELENA V10.6: Núcleo de Segurança Ativo.</div>
-    <div id="voice-status">Selena a falar...</div>
-    <div id="user-badge" class="profile-badge">Visitante</div>
+        // =========================================
+        // SISTEMA DE ÁUDIO REFINADO
+        // =========================================
+        const sounds = {
+            music: new Audio("https://ia800504.us.archive.org/33/items/TetrisThemeMusic/Tetris.mp3"),
+            rotate: new Audio("https://www.soundjay.com/mechanical/sounds/camera-shutter-click-01.mp3"),
+            move: new Audio("https://www.soundjay.com/buttons/sounds/button-09.mp3"),
+            impact: new Audio("https://www.soundjay.com/transportation/sounds/trunk-close-1.mp3"),
+            clear: new Audio("https://www.soundjay.com/buttons/sounds/button-10.mp3"),
+            lightning: new Audio("https://www.soundjay.com/nature/sounds/thunder-01.mp3"),
+            curse: new Audio("https://www.soundjay.com/misc/sounds/evil-laugh-01.mp3"),
+            gameover: new Audio("https://www.soundjay.com/human/sounds/shout-01.mp3")
+        };
 
-    <div id="monitor-dot"></div>
+        // Configurações base
+        sounds.music.loop = true;
+        sounds.music.volume = 0.2;
+        Object.keys(sounds).forEach(key => {
+            if (key !== 'music') sounds[key].volume = 0.8; // Volume alto para FX
+        });
 
-    <!-- HUD Mensagem -->
-    <div id="msg-input-container">
-        <p class="text-[10px] text-blue-400 font-bold mb-3 uppercase tracking-[0.2em]">Transmitir Mensagem de Texto</p>
-        <input type="text" id="msg-text" placeholder="Escreve a tua mensagem..." class="mb-4 text-sm">
-        <div class="flex gap-3">
-            <button onclick="sendMessage()" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-xl text-[10px] uppercase tracking-widest shadow-lg">Transmitir</button>
-            <button onclick="toggleMsgHUD()" class="bg-slate-800 text-white px-5 rounded-xl text-[10px] uppercase font-bold">X</button>
-        </div>
-    </div>
+        // Função para desbloquear áudio no primeiro toque (Browser Policy)
+        let audioUnlocked = false;
+        const unlockAudio = () => {
+            if (audioUnlocked) return;
+            Object.values(sounds).forEach(s => {
+                s.play().then(() => {
+                    s.pause();
+                    s.currentTime = 0;
+                }).catch(() => {});
+            });
+            audioUnlocked = true;
+        };
 
-    <!-- Botões -->
-    <div class="btn-icon bell-btn" onclick="openModal('history-modal')">
-        <svg viewBox="0 0 24 24" class="w-8 h-8 text-white fill-current"><path d="M12 22a2.01 2.01 0 002-2h-4a2.01 2.01 0 002 2zm6-6V10c0-3.07-1.63-5.64-4.5-6.32V3c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 4.36 6 6.92 6 10v6l-2 2v1h16v-1l-2-2z" /></svg>
-    </div>
-
-    <div class="btn-icon settings-btn" onclick="openModal('settings-modal')">
-        <svg viewBox="0 0 24 24" class="w-8 h-8 text-white fill-current"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" /><path fill-rule="evenodd" d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 00-.986.57c-.166.115-.334.11-.444.03L6.21 5.155c-.78-.486-1.815-.297-2.363.44l-1.082 1.468c-.548.743-.44 1.803.242 2.374l1.01.847c.101.085.145.236.115.389a7.512 7.512 0 000 1.133c.03.153-.014.304-.115.389l-1.01.847c-.682.571-.79 1.631-.242 2.374l1.082 1.468c.548.737 1.583.926 2.363.44l1.112-.683c.11-.08.278-.085.444.03.295.203.62.393.986.57.182.088.278.228.298.348l.177 1.072c.151.904.933 1.567 1.85 1.567h1.844c.916 0 1.699-.663 1.85-1.567l.178-1.072c.02-.12.115-.26.297-.348.366-.177.691-.367.986-.57.166-.115.335-.11.444-.03l1.112.683c.78.486 1.815.297 2.363-.44l1.082-1.468c.548-.743.44-1.803-.242-2.374l-1.01-.847c-.101-.085-.145-.236-.115-.389a7.512 7.512 0 000-1.133c-.03-.153.014-.304.115-.389l1.01-.847c.682-.571.79-1.631.242-2.374l-1.082-1.468c-.548-.737-1.583-.926-2.363-.44l-1.112.683c-.11.08-.278.085-.444-.03a7.493 7.493 0 00-.986-.57c-.182-.088-.278-.228-.298-.348l-.177-1.072c-.151-.904-.933-1.567-1.85-1.567h-1.844zM12 15.75a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z" clip-rule="evenodd" /></svg>
-    </div>
-
-    <!-- Avatar -->
-    <div id="avatar-container">
-        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="image-rendering: pixelated;">
-            <g id="face">
-                <rect id="eye-l" class="eye" x="40" y="35" width="40" height="40" fill="white" />
-                <rect id="eye-r" class="eye" x="120" y="35" width="40" height="40" fill="white" />
-                <rect id="mouth-pixel" x="60" y="140" width="80" height="8" fill="white" />
-            </g>
-        </svg>
-    </div>
-
-    <!-- Controlos -->
-    <div class="controls-container">
-        <div id="mic-bubble" onclick="toggleMsgHUD()">
-            <svg viewBox="0 0 24 24" class="w-10 h-10 text-white/50 fill-current">
-                <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
-            </svg>
-        </div>
-    </div>
-
-    <!-- Modais -->
-    <div id="history-modal" class="modal"><div class="modal-content"><h2 class="text-white text-xl font-black mb-10 uppercase border-b border-white/5 pb-4 w-full text-center italic">Monitorização</h2><div id="activity-log" class="w-full max-w-md"></div><button onclick="closeModal('history-modal')" class="mt-8 text-slate-500 uppercase border border-white/10 px-10 py-5 rounded-full font-bold text-xs">Voltar</button></div></div>
-
-    <div id="settings-modal" class="modal">
-        <div class="modal-content">
-            <h2 class="text-white text-xl font-black mb-10 uppercase border-b border-white/5 pb-4 w-full text-center italic tracking-widest">Painel Operacional</h2>
-            <div class="bg-slate-900/60 p-6 rounded-3xl w-full max-w-md border border-white/5 mb-6">
-                <label class="text-[9px] text-blue-400 uppercase font-black mb-2 block">Identificação do Operador</label>
-                <input type="text" id="user-id-input" placeholder="Teu Nome..." class="mb-6">
-                <label class="text-[9px] text-red-500 uppercase font-black mb-2 block">Sala de Rede</label>
-                <input type="text" id="room-id" value="SALA_SEL_01" class="font-bold text-center mb-6">
-                <button onclick="saveProfileSettings()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl text-xs uppercase shadow-xl active:scale-95 transition-all">Sincronizar Perfil</button>
-            </div>
-            <button onclick="closeModal('settings-modal')" class="mt-8 text-slate-500 uppercase border border-white/10 px-10 py-4 rounded-full font-bold text-xs">Fechar</button>
-        </div>
-    </div>
-
-    <script>
-        // --- AMBIENTE & CONFIGURAÇÃO (FIREBASE RULES COMPLIANCE) ---
-        
-        // Tentativa de obter configurações das variáveis de ambiente injetadas
-        let firebaseConfig = {};
-        try {
-            firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        } catch (e) {
-            console.error("Config parsing error", e);
-        }
-
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'selena-core-v10';
-        const apiKey = ""; // Injetar via window.apiKey ou Kodular para voz Gemini
-
-        function log(msg, isError = false) {
-            const el = document.getElementById('debug-console');
-            if(!el) return;
-            const color = isError ? "#f87171" : "#4ade80";
-            el.innerHTML += `<div>[${new Date().toLocaleTimeString()}] > ${msg}</div>`;
-            el.scrollTop = el.scrollHeight;
-        }
-
-        function openModal(id) { document.getElementById(id).classList.add('active'); }
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-
-        let isSpeaking = false, audioUnlocked = false;
-        let db, auth, userAuthenticated = false;
-        let currentUserName = localStorage.getItem('selena_op_name') || "Visitante";
-        let messageQueue = [];
-
-        // REGRA 3: Autenticação ANTES de qualquer query
-        async function initFirebase() {
-            if (!firebaseConfig.apiKey) {
-                log("Sistema Offline: Aguardando Configuração.", true);
-                return;
-            }
-
+        const playSound = (name) => {
             try {
-                if (!firebase.apps.length) {
-                    firebase.initializeApp(firebaseConfig);
+                const s = sounds[name];
+                if (s) {
+                    s.currentTime = 0;
+                    s.play().catch(e => console.error("Erro áudio:", name, e));
                 }
-                
-                auth = firebase.auth();
-                db = firebase.firestore();
+            } catch (e) {}
+        };
 
-                log("Iniciando Autenticação...");
-
-                // Prioridade para Token customizado
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await auth.signInWithCustomToken(__initial_auth_token);
-                } else {
-                    await auth.signInAnonymously();
-                }
-
-                // Só chegamos aqui se o await acima tiver sucesso
-                userAuthenticated = true;
-                log("Rede: Acesso Confirmado.");
-                
-                document.getElementById('user-badge').innerText = currentUserName;
-                document.getElementById('monitor-dot').style.backgroundColor = "#22c55e";
-                document.getElementById('monitor-dot').style.boxShadow = "0 0 15px #22c55e";
-                
-                // Ativar escuta APÓS garantir auth
-                setupNetworkListener();
-            } catch (err) { 
-                log("Erro de Login: " + err.code, true);
-                console.error("Firebase Auth Error:", err);
-            }
-        }
-
-        // --- MOTOR DE VOZ (TTS) ---
-        function addToQueue(text) {
-            messageQueue.push(text);
-            processQueue();
-        }
-
-        async function processQueue() {
-            if (isSpeaking || messageQueue.length === 0 || !audioUnlocked) return;
-            const nextText = messageQueue.shift();
-            await speak(nextText);
-        }
-
-        async function speak(text) {
-            if (!apiKey) {
-                log("Voz: Chave Gemini ausente.", true);
-                isSpeaking = false;
-                processQueue();
-                return;
-            }
-            isSpeaking = true;
+        const signalKodular = (msg) => {
             try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: text }] }],
-                        generationConfig: { 
-                            responseModalities: ["AUDIO"], 
-                            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Zephyr" } } } 
-                        }
-                    })
-                });
-                const data = await res.json();
-                const audioPart = data.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
-                if (audioPart) {
-                    const sampleRate = parseInt(audioPart.inlineData.mimeType.split('rate=')[1]) || 24000;
-                    play(pcmToWav(audioPart.inlineData.data, sampleRate));
-                } else { 
-                    log("Voz: Erro na síntese.", true);
-                    isSpeaking = false; 
-                    processQueue(); 
+                if (window.AppInventor && window.AppInventor.setWebViewString) {
+                    window.AppInventor.setWebViewString(msg + ":" + Date.now());
                 }
-            } catch(e) { isSpeaking = false; processQueue(); }
-        }
+            } catch (e) {}
+        };
 
-        function pcmToWav(pcm, rate) {
-            const buffer = Uint8Array.from(atob(pcm), c => c.charCodeAt(0)).buffer;
-            const wav = new ArrayBuffer(44 + buffer.byteLength);
-            const view = new DataView(wav);
-            const str = (off, s) => { for (let i = 0; i < s.length; i++) view.setUint8(off + i, s.charCodeAt(i)); };
-            str(0, 'RIFF'); view.setUint32(4, 36 + buffer.byteLength, true);
-            str(8, 'WAVE'); str(12, 'fmt '); view.setUint32(16, 16, true);
-            view.setUint16(20, 1, true); view.setUint16(22, 1, true);
-            view.setUint32(24, rate, true); view.setUint32(28, rate * 2, true);
-            view.setUint16(32, 2, true); view.setUint16(34, 16, true);
-            str(36, 'data'); view.setUint32(40, buffer.byteLength, true);
-            new Uint8Array(wav, 44).set(new Uint8Array(buffer));
-            return new Blob([wav], { type: 'audio/wav' });
-        }
+        const COLS = 10;
+        const ROWS = 20;
+        const INITIAL_SPEED = 800;
+        const FAST_SPEED = 50; 
 
-        function play(blob) {
-            const audio = new Audio(URL.createObjectURL(blob));
-            const mouth = document.getElementById('mouth-pixel');
-            const status = document.getElementById('voice-status');
-            const stop = () => { isSpeaking = false; mouth.classList.remove('is-talking-mouth'); status.style.display = 'none'; processQueue(); };
-            audio.onplay = () => { mouth.classList.add('is-talking-mouth'); status.style.display = 'block'; };
-            audio.onended = stop; audio.onerror = stop;
-            audio.play().catch(stop);
-        }
+        const TETROMINOS = {
+            I: { shape: [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]], color: 'bg-cyan-400 border-cyan-200 shadow-[0_0_10px_rgba(34,211,238,0.8)]' },
+            J: { shape: [[1, 0, 0], [1, 1, 1], [0, 0, 0]], color: 'bg-blue-500 border-blue-300 shadow-[0_0_10px_rgba(59,130,246,0.8)]' },
+            L: { shape: [[0, 0, 1], [1, 1, 1], [0, 0, 0]], color: 'bg-orange-500 border-orange-300 shadow-[0_0_10px_rgba(249,115,22,0.8)]' },
+            O: { shape: [[1, 1], [1, 1]], color: 'bg-yellow-400 border-yellow-200 shadow-[0_0_10px_rgba(250,204,21,0.8)]' },
+            S: { shape: [[0, 1, 1], [1, 1, 0], [0, 0, 0]], color: 'bg-green-400 border-green-200 shadow-[0_0_10px_rgba(74,222,128,0.8)]' },
+            T: { shape: [[0, 1, 0], [1, 1, 1], [0, 0, 0]], color: 'bg-purple-500 border-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.8)]' },
+            Z: { shape: [[1, 1, 0], [0, 1, 1], [0, 0, 0]], color: 'bg-red-500 border-red-300 shadow-[0_0_10px_rgba(239,68,68,0.8)]' },
+            BLACK: { shape: [[1, 1, 1], [1, 1, 1], [1, 1, 1]], color: 'bg-black border-slate-700 shadow-[0_0_15px_rgba(255,255,255,0.2)]', isBlack: true }
+        };
 
-        // --- FIREBASE REDE ---
-        function setupNetworkListener() {
-            if (!db || !userAuthenticated) return;
-            const room = document.getElementById('room-id').value;
+        function App() {
+            const [board, setBoard] = useState(Array.from({ length: ROWS }, () => Array(COLS).fill(null)));
+            const [activePiece, setActivePiece] = useState(null);
+            const [nextPiece, setNextPiece] = useState(null);
+            const [score, setScore] = useState(0);
+            const [gameOver, setGameOver] = useState(false);
+            const [paused, setPaused] = useState(false);
+            const [isFastDropping, setIsFastDropping] = useState(false);
+            const [isShaking, setIsShaking] = useState(false);
+            const [isRotating, setIsRotating] = useState(false);
+            const [dustParticles, setDustParticles] = useState([]);
+            const [isMuted, setIsMuted] = useState(false);
             
-            // REGRA 1: Caminho estrito /artifacts/{appId}/public/data/{collectionName}
-            const path = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('messages');
-            
-            // REGRA 2: Filtro simples sem complexidade
-            path.onSnapshot(snap => {
-                snap.docChanges().forEach(change => {
-                    if (change.type === "added") {
-                        const data = change.doc.data();
-                        // Filtragem manual em memória para evitar erros de índice (Regra 2)
-                        if (data.timestamp > Date.now() - 6000 && data.sender !== auth.currentUser.uid && data.room === room) {
-                            addToQueue(`${data.userName} informa: ${data.content}`);
+            const [lightnings, setLightnings] = useState(3);
+            const [countdown, setCountdown] = useState(null);
+            const [nextIsCurse, setNextIsCurse] = useState(false);
+
+            const bagRef = useRef([]);
+            const boardRef = useRef(board);
+            const activePieceRef = useRef(activePiece);
+            const nextPieceRef = useRef(nextPiece);
+
+            useEffect(() => { boardRef.current = board; }, [board]);
+            useEffect(() => { activePieceRef.current = activePiece; }, [activePiece]);
+            useEffect(() => { nextPieceRef.current = nextPiece; }, [nextPiece]);
+
+            // Controle da música (Silêncio apenas na música)
+            useEffect(() => {
+                sounds.music.volume = isMuted ? 0 : 0.2;
+            }, [isMuted]);
+
+            useEffect(() => {
+                let timer;
+                if (countdown !== null && countdown > 0 && !paused && !gameOver) {
+                    timer = setInterval(() => setCountdown(prev => prev - 1), 1000);
+                } else if (countdown === 0 && !gameOver) {
+                    setNextIsCurse(true);
+                    setCountdown(30);
+                    signalKodular("curse_activated");
+                }
+                return () => clearInterval(timer);
+            }, [countdown, paused, gameOver]);
+
+            const triggerImpactVFX = (posX) => {
+                const newParticles = Array.from({ length: 6 }).map((_, i) => ({
+                    id: Math.random(),
+                    left: `${posX * 10 + (Math.random() * 10)}%`
+                }));
+                setDustParticles(prev => [...prev, ...newParticles]);
+                setTimeout(() => {
+                    setDustParticles(prev => prev.filter(p => !newParticles.find(n => n.id === p.id)));
+                }, 400);
+                setIsShaking(true);
+                setTimeout(() => setIsShaking(false), 150);
+                playSound('impact'); // Som de peso garantido no impacto
+            };
+
+            const getNextFromBag = useCallback(() => {
+                if (nextIsCurse) {
+                    setNextIsCurse(false);
+                    playSound('curse');
+                    return { ...TETROMINOS.BLACK, pos: { x: 3, y: 0 } };
+                }
+                if (bagRef.current.length === 0) {
+                    const keys = Object.keys(TETROMINOS).filter(k => k !== 'BLACK');
+                    const newBag = [...keys].sort(() => Math.random() - 0.5);
+                    bagRef.current = newBag;
+                }
+                const type = bagRef.current.pop();
+                return { ...TETROMINOS[type], pos: { x: 3, y: 0 } };
+            }, [nextIsCurse]);
+
+            const checkCollision = (piece, pos, currentBoard) => {
+                for (let y = 0; y < piece.shape.length; y++) {
+                    for (let x = 0; x < piece.shape[y].length; x++) {
+                        if (piece.shape[y][x]) {
+                            const ny = pos.y + y;
+                            const nx = pos.x + x;
+                            if (nx < 0 || nx >= COLS || ny >= ROWS || (ny >= 0 && currentBoard[ny][nx])) {
+                                return true;
+                            }
                         }
                     }
+                }
+                return false;
+            };
+
+            const rotate = () => {
+                unlockAudio(); // Libera áudio no primeiro uso
+                if (!activePiece || paused || gameOver || activePiece.isBlack) return;
+                const s = activePiece.shape;
+                const rotated = s[0].map((_, i) => s.map(row => row[i]).reverse());
+                if (!checkCollision({ ...activePiece, shape: rotated }, activePiece.pos, boardRef.current)) {
+                    setActivePiece(prev => ({ ...prev, shape: rotated }));
+                    setIsRotating(true);
+                    setTimeout(() => setIsRotating(false), 100);
+                    playSound('rotate');
+                    signalKodular("rotate");
+                }
+            };
+
+            const move = (dir) => {
+                unlockAudio();
+                if (!activePiece || paused || gameOver || activePiece.isBlack) return;
+                const np = { ...activePiece.pos, x: activePiece.pos.x + dir };
+                if (!checkCollision(activePiece, np, boardRef.current)) {
+                    setActivePiece(prev => ({ ...prev, pos: np }));
+                    playSound('move'); // Efeito sonoro lateral "voop"
+                    signalKodular("move");
+                }
+            };
+
+            const lock = () => {
+                const currentPiece = activePieceRef.current;
+                const currentBoard = boardRef.current;
+                if (!currentPiece) return;
+
+                const newBoard = currentBoard.map(r => [...r]);
+                currentPiece.shape.forEach((row, y) => {
+                    row.forEach((v, x) => {
+                        if (v) {
+                            const by = currentPiece.pos.y + y;
+                            const bx = currentPiece.pos.x + x;
+                            if (by >= 0) newBoard[by][bx] = currentPiece.color;
+                        }
+                    });
                 });
-            }, err => {
-                log("Snapshot Error: " + err.code, true);
-            });
-        }
 
-        async function sendMessage() {
-            const text = document.getElementById('msg-text').value;
-            const room = document.getElementById('room-id').value;
-            if(!text || !userAuthenticated) {
-                log("Erro: Não autenticado ou texto vazio.", true);
-                return;
-            }
-            try {
-                const path = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('messages');
-                await path.add({
-                    content: text, 
-                    room: room, 
-                    userName: currentUserName, 
-                    sender: auth.currentUser.uid, 
-                    timestamp: Date.now()
+                triggerImpactVFX(currentPiece.pos.x);
+
+                let linesCleared = 0;
+                const filtered = newBoard.filter(r => !r.every(c => c !== null));
+                linesCleared = ROWS - filtered.length;
+
+                while (filtered.length < ROWS) {
+                    filtered.unshift(Array(COLS).fill(null));
+                }
+
+                if (linesCleared > 0) {
+                    setScore(prev => prev + (linesCleared * 100));
+                    if (countdown !== null) setCountdown(30);
+                    playSound('clear');
+                    signalKodular("clear");
+                }
+
+                setBoard(filtered);
+                
+                const next = nextPieceRef.current;
+                if (checkCollision(next, next.pos, filtered)) {
+                    setGameOver(true);
+                    setActivePiece(null);
+                    sounds.music.pause();
+                    playSound('gameover');
+                    signalKodular("gameover");
+                } else {
+                    setActivePiece(next);
+                    setNextPiece(getNextFromBag());
+                }
+            };
+
+            const drop = useCallback(() => {
+                const currentPiece = activePieceRef.current;
+                if (!currentPiece || paused || gameOver) return;
+
+                const np = { ...currentPiece.pos, y: currentPiece.pos.y + 1 };
+                if (!checkCollision(currentPiece, np, boardRef.current)) {
+                    setActivePiece(prev => ({ ...prev, pos: np }));
+                } else {
+                    lock();
+                }
+            }, [paused, gameOver, getNextFromBag]);
+
+            const useLightning = (e) => {
+                e.stopPropagation();
+                unlockAudio();
+                if (lightnings <= 0 || paused || gameOver) return;
+                setIsShaking(true);
+                setTimeout(() => setIsShaking(false), 3000);
+                
+                const currentCount = lightnings;
+                let linesToClear = (currentCount === 3) ? 2 : (currentCount === 2) ? 4 : 6;
+                
+                setBoard(current => {
+                    const newBoard = current.slice(0, ROWS - linesToClear);
+                    while (newBoard.length < ROWS) newBoard.unshift(Array(COLS).fill(null));
+                    return newBoard;
                 });
-                document.getElementById('msg-text').value = "";
-                toggleMsgHUD();
-                log("Sinal enviado.");
-            } catch (err) { log("Erro Firestore: Envio negado.", true); }
+
+                setLightnings(prev => prev - 1);
+                playSound('lightning');
+                signalKodular("lightning");
+                if (currentCount === 1) setCountdown(30);
+            };
+
+            const startGame = () => {
+                unlockAudio();
+                if (!isMuted) {
+                    sounds.music.currentTime = 0;
+                    sounds.music.play().catch(() => {});
+                }
+                
+                signalKodular("start");
+                bagRef.current = [];
+                setNextIsCurse(false);
+                setBoard(Array.from({ length: ROWS }, () => Array(COLS).fill(null)));
+                setScore(0);
+                setGameOver(false);
+                setPaused(false);
+                setLightnings(3);
+                setCountdown(null);
+                const first = { ...TETROMINOS.T, pos: { x: 3, y: 0 } };
+                setActivePiece(first);
+                setNextPiece(getNextFromBag());
+            };
+
+            const togglePause = () => {
+                unlockAudio();
+                const newPaused = !paused;
+                setPaused(newPaused);
+                if (newPaused) sounds.music.pause(); 
+                else if (!isMuted) sounds.music.play().catch(() => {});
+                signalKodular(newPaused ? "pause" : "resume");
+            };
+
+            const toggleMute = (e) => {
+                e.stopPropagation();
+                unlockAudio();
+                setIsMuted(!isMuted);
+            };
+
+            useEffect(() => {
+                let interval;
+                if (!paused && !gameOver && activePiece) {
+                    const speed = (isFastDropping && !activePiece.isBlack) 
+                        ? FAST_SPEED 
+                        : Math.max(100, INITIAL_SPEED - (Math.floor(score/500) * 50));
+                    interval = setInterval(drop, speed);
+                }
+                return () => clearInterval(interval);
+            }, [paused, gameOver, activePiece, drop, score, isFastDropping]);
+
+            const display = useMemo(() => {
+                const b = board.map(r => [...r]);
+                if (activePiece && !paused) {
+                    activePiece.shape.forEach((row, y) => {
+                        row.forEach((v, x) => {
+                            if (v) {
+                                const by = activePiece.pos.y + y;
+                                const bx = activePiece.pos.x + x;
+                                if (by >= 0 && by < ROWS) b[by][bx] = activePiece.color;
+                            }
+                        });
+                    });
+                }
+                return b;
+            }, [board, activePiece, paused]);
+
+            return (
+                <div 
+                    className={`fixed inset-0 flex flex-col font-sans overflow-hidden touch-none select-none ${isShaking ? 'shake-active' : ''}`}
+                    onPointerDown={(e) => { 
+                        unlockAudio(); 
+                        if (!activePiece?.isBlack) setIsFastDropping(true); 
+                    }}
+                    onPointerUp={() => setIsFastDropping(false)}
+                    onPointerLeave={() => setIsFastDropping(false)}
+                >
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-4 h-16 bezel-metal z-40">
+                        <div className="flex flex-col">
+                            <span className="font-black text-2xl tracking-tighter text-slate-100 italic leading-none">TETRIS</span>
+                            <span className="text-[9px] text-blue-500 font-bold uppercase tracking-widest leading-none mt-1">Audio Fix</span>
+                        </div>
+                        
+                        <div className="flex flex-col items-center justify-center">
+                            <span className="text-[8px] text-slate-400 font-bold uppercase mb-1">Próxima</span>
+                            <div className="next-piece-container">
+                                {nextPiece && nextPiece.shape.map((row, y) => (
+                                    <div key={y} className="flex gap-0.5">
+                                        {row.map((cell, x) => (
+                                            <div key={x} className={`w-2.5 h-2.5 rounded-[1px] ${cell ? nextPiece.color : 'bg-transparent'}`} />
+                                        ))}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            {/* Silencia APENAS a música */}
+                            <button onPointerDown={toggleMute} className={`p-2 rounded-xl border border-slate-700/50 transition-all ${isMuted ? 'bg-red-900/40 text-red-500' : 'bg-slate-800 text-blue-400'}`}>
+                                {isMuted ? <i data-lucide="headphones-off" size="18"></i> : <i data-lucide="headphones" size="18"></i>}
+                            </button>
+                            
+                            <button onPointerDown={(e) => { e.stopPropagation(); togglePause(); }} className="p-2 bezel-metal rounded-xl text-blue-400 active:scale-95 transition">
+                                {paused ? <i data-lucide="play" fill="currentColor"></i> : <i data-lucide="pause" fill="currentColor"></i>}
+                            </button>
+                            <div className="flex flex-col items-end">
+                                <span className="text-[9px] text-slate-500 font-bold uppercase leading-none mb-1">Almas</span>
+                                <span className="font-mono text-lg font-bold text-slate-100 leading-none">{score.toString().padStart(5, '0')}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Jogo */}
+                    <div className="flex-1 flex items-center justify-center relative p-4 z-20">
+                        <div className="relative rounded-xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.9)]" style={{ height: '62vh', aspectRatio: '1/2' }}>
+                            <div className="h-full w-full game-grid">
+                                {display.map((row, y) => row.map((cell, x) => {
+                                    const isActivePart = activePiece && !paused && y >= activePiece.pos.y && y < activePiece.pos.y + activePiece.shape.length && x >= activePiece.pos.x && x < activePiece.pos.x + activePiece.shape[0].length && activePiece.shape[y - activePiece.pos.y][x - activePiece.pos.x];
+                                    return (
+                                        <div key={`${y}-${x}`} className={`w-full h-full ${cell || 'bg-transparent'} rounded-[1px] ${cell ? `${cell} border-b border-r border-black/50 brightness-125` : 'border-[0.5px] border-white/5'} ${isActivePart && isRotating ? 'piece-rotate-effect' : ''}`} />
+                                    );
+                                }))}
+                                {dustParticles.map(p => <div key={p.id} className="dust-particle" style={{ left: p.left }} />)}
+                            </div>
+
+                            {countdown !== null && (
+                                <div className="absolute top-4 left-0 right-0 text-center z-50 pointer-events-none">
+                                    <div className="bg-red-950/80 text-red-500 text-[10px] font-black py-1 px-4 rounded-md border border-red-900 animate-pulse uppercase">
+                                        Maldição em: {countdown}S
+                                    </div>
+                                </div>
+                            )}
+
+                            {(!activePiece || gameOver) && (
+                                <div className="absolute inset-0 bg-slate-950/95 flex flex-col items-center justify-center p-6 text-center z-30" onPointerDown={(e) => e.stopPropagation()}>
+                                    {gameOver && (
+                                        <div className="mb-10">
+                                            <h2 className="text-red-700 font-black text-5xl mb-2 italic tracking-tighter drop-shadow-xl">VOCÊ MORREU</h2>
+                                            <p className="text-slate-500 font-mono text-xs tracking-widest uppercase">Score: {score}</p>
+                                        </div>
+                                    )}
+                                    <button onPointerDown={startGame} className="bg-red-900 hover:bg-red-800 px-14 py-5 rounded-2xl font-black text-2xl text-white active:scale-90 transition-all shadow-[0_0_30px_rgba(153,27,27,0.5)] border border-red-700 uppercase">
+                                        {gameOver ? 'Renascer' : 'Iniciar'}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="absolute right-1 flex flex-col gap-4 z-40" onPointerDown={(e) => e.stopPropagation()}>
+                            {[...Array(3)].map((_, i) => (
+                                <button key={i} disabled={lightnings <= i || gameOver || paused} onPointerDown={useLightning} className="bolt-btn w-12 h-12 rounded-2xl flex items-center justify-center shadow-2xl border-t border-yellow-500/20">
+                                    <i data-lucide="zap" fill={lightnings > i ? "#eab308" : "none"} className={lightnings > i ? "text-yellow-500" : "text-slate-800"}></i>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Botões 3D */}
+                    <div className="h-40 bezel-metal grid grid-cols-3 items-center px-4 z-40 pb-6" onPointerDown={(e) => e.stopPropagation()}>
+                        <div className="flex justify-center">
+                            <button disabled={activePiece?.isBlack} onPointerDown={() => move(-1)} className="w-20 h-20 bezel-metal rounded-2xl flex items-center justify-center text-slate-100 active:bg-blue-900/40 disabled:opacity-10 shadow-xl">
+                                <i data-lucide="chevron-left" size="44"></i>
+                            </button>
+                        </div>
+                        <div className="flex justify-center">
+                            <button disabled={activePiece?.isBlack} onPointerDown={rotate} className="w-24 h-24 btn-3d-rotate rounded-full flex items-center justify-center text-white disabled:opacity-10 shadow-2xl">
+                                <i data-lucide="rotate-cw" size="48"></i>
+                            </button>
+                        </div>
+                        <div className="flex justify-center">
+                            <button disabled={activePiece?.isBlack} onPointerDown={() => move(1)} className="w-20 h-20 bezel-metal rounded-2xl flex items-center justify-center text-slate-100 active:bg-blue-900/40 disabled:opacity-10 shadow-xl">
+                                <i data-lucide="chevron-right" size="44"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
         }
 
-        function saveProfileSettings() {
-            const val = document.getElementById('user-id-input').value.trim();
-            if(val) {
-                currentUserName = val;
-                localStorage.setItem('selena_op_name', val);
-                document.getElementById('user-badge').innerText = val;
-                log("Operador Identificado.");
-            }
-            closeModal('settings-modal');
-        }
-
-        function unlockAudio() {
-            if (audioUnlocked) return;
-            const context = new (window.AudioContext || window.webkitAudioContext)();
-            if (context.state === 'suspended') context.resume();
-            audioUnlocked = true;
-            document.getElementById('audio-unlock-overlay').style.display = 'none';
-            initFirebase(); // Inicia Firebase APÓS gesto do usuário (necessário para áudio e auth)
-        }
-
-        function toggleMsgHUD() {
-            const el = document.getElementById('msg-input-container');
-            el.style.display = (el.style.display === 'block') ? 'none' : 'block';
-            if(el.style.display === 'block') document.getElementById('msg-text').focus();
-        }
-
-        window.onload = () => {
-            setInterval(() => { 
-                const rx = (Math.random() * 30) - 15, ry = (Math.random() * 14) - 7;
-                document.getElementById('eye-l').style.transform = `translate(${rx}px, ${ry}px)`;
-                document.getElementById('eye-r').style.transform = `translate(${rx}px, ${ry}px)`;
-            }, 4000);
-            setInterval(() => { 
-                const elL = document.getElementById('eye-l'), elR = document.getElementById('eye-r');
-                elL.classList.add('blink'); elR.classList.add('blink');
-                setTimeout(() => { elL.classList.remove('blink'); elR.classList.remove('blink'); }, 200);
-            }, 5000);
-        };
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+        setTimeout(() => { if (window.lucide) window.lucide.createIcons(); }, 500);
     </script>
 </body>
 </html>
